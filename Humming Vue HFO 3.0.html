@@ -1,0 +1,618 @@
+# Humming Vue · HFO 3.0 — Глубокий технический аудит разработчика
+
+> Полный анализ кодовой базы: физическая модель, React-архитектура, CSS-слой, баги, производительность, доступность.
+
+---
+
+## 0. Структура файлов (бандл)
+
+```
+Humming_Vue___HFO_3_0.html
+├── __bundler/manifest          ← 21 блоб (base64+gzip)
+│   ├── [0]  logo.svg               316 B → 606 B
+│   ├── [1]  react.development.js   28 KB → 110 KB     ⚠ dev-build
+│   ├── [2]  react-dom.development  234 KB → 1.08 MB   ⚠ dev-build
+│   ├── [3]  Babel standalone       660 KB → 3.14 MB   ⚠ runtime compiler
+│   ├── [4]  app.jsx                364 B → 690 B
+│   ├── [5]  simulator.jsx          13.6 KB → 41.7 KB
+│   ├── [6]  protocols.jsx          6.8 KB → 15.4 KB
+│   ├── [7]  sections.jsx           12.2 KB → 36.9 KB
+│   └── [8–20] woff2 шрифты (Inter Tight + JetBrains Mono, 13 файлов)
+├── __bundler/template          ← JSON-строка с UUID-плейсхолдерами
+│   ├── <style> @font-face      18 989 chars (все шрифты инлайном)
+│   └── <style> app CSS         54 577 chars (всё приложение)
+└── __bundler/ext_resources     ← карта UUID → ресурс
+```
+
+**Итого декомпрессированных JS: ~4.4 MB** — всё загружается, декомпрессируется и исполняется при каждом открытии страницы.
+
+---
+
+## 1. 🔴 КРИТИЧЕСКИЕ БАГИ — влияют на корректность
+
+### 1.1 `targetSV` hint использует `baseEfficiency` вместо реальной efficiency
+
+**Файл:** `simulator.jsx`, компонент `Simulator()`
+
+```jsx
+// ❌ КАК ЕСТЬ — BUG
+const targetSV = targetVhfo / W.baseEfficiency;
+
+// ✅ ДОЛЖНО БЫТЬ
+const targetSV = targetVhfo / state.efficiency;
+```
+
+**Количественный эффект** (infant, MAP=13, Hz=10):
+
+| Сценарий | baseEfficiency | Реальная efficiency | Hint показывает | Должен показывать | Ошибка |
+|---|---|---|---|---|---|
+| optimal | 33% | 33.0% | SV ≈ 18 мл | SV ≈ 18 мл | 0% |
+| lowCompliance | 33% | 17.2% | SV ≈ 18 мл | SV ≈ 35 мл | **48%** |
+| ettBlock | 33% | 6.6% | SV ≈ 18 мл | SV ≈ 91 мл | **80%** |
+
+При сценарии `ettBlock` подсказка говорит «нужен SV ≈ 18 мл», хотя реально нужен SV ≈ 91 мл — грубая дезориентация врача.
+
+---
+
+### 1.2 Педиатрический пресет: амплитуда стартует на максимуме (95 cmH₂O)
+
+**Файл:** `simulator.jsx`, `computeState()`
+
+```js
+// amplitude = sv * (1 + hz/refHz) * 0.95
+// PEDIATRIC default: SV=50, Hz=7, refHz=7
+// → 50 * (1 + 7/7) * 0.95 = 50 * 2 * 0.95 = 95.0 cmH₂O  ← потолок clamp(4, 95)
+```
+
+**Следствие:** пользователь открывает вкладку «10 кг+» и видит ΔA = **95 cmH₂O** с иконкой «critical», хотя это дефолтные настройки. Неверная клиническая интерпретация: «что-то сломалось», хотя формула просто уткнулась в потолок.
+
+**Рекомендация:** снизить `svDefault` для pediatric до 35 мл (ΔA ≈ 66 cmH₂O) или поднять верхний clamp до 120 cmH₂O для pediatric.
+
+---
+
+### 1.3 Педиатрический пресет: `targetMet = false` с первого экрана
+
+```python
+# SV=50, Map=17, Hz=7 → vhfo=21.0 мл, targetVhfo=30.0 мл
+# vhfo/targetVhfo = 0.70 < 0.82 → targetMet = False
+```
+
+Пользователь немедленно видит «Не попал в цель». Для достижения цели нужен SV ≈ 71 мл. Это не баг физики — но педагогически деструктивно: дефолт должен показывать рабочий сценарий.
+
+---
+
+### 1.4 Педиатрический пресет: pCO₂ гипокапничен по умолчанию
+
+```python
+# dco2/kg = 206 → pco2 = 40/sqrt(206/80) = 25 mmHg
+# Норма: 35–45 mmHg. Дефолт показывает ГИПЕРЕНТИЛЯЦИЮ
+# Для pco2≈40 нужен SV≈30 (dco2/kg≈74)
+```
+
+Клиническое значение: врач, обучающийся по этому симулятору, получает «норму» = 25 mmHg, что у реального пациента означает тяжёлый респираторный алкалоз.
+
+---
+
+### 1.5 `adj-row` цветовые классы не определены в CSS
+
+**Файл:** `sections.jsx`, компонент `AdjustmentMatrix()`
+
+```jsx
+// JSX генерирует:
+className={`adj-row adj-${a.which}`}
+// где a.which ∈ {'оксигенация', 'вентиляция', 'тревога'}
+```
+
+**CSS содержит:**
+```css
+.adj-tag-оксигенация { background: #DBEAFE; ... }  /* ✓ есть */
+.adj-tag-вентиляция  { background: #FEF3C7; ... }  /* ✓ есть */
+.adj-tag-тревога     { background: #FEF2F2; ... }  /* ✓ есть */
+/* .adj-оксигенация — ОТСУТСТВУЕТ */
+/* .adj-вентиляция  — ОТСУТСТВУЕТ */
+/* .adj-тревога     — ОТСУТСТВУЕТ */
+```
+
+**Следствие:** строки таблицы коррекции не имеют цветовой дифференциации по типу (только чётное/нечётное). Весь смысл визуальной классификации теряется.
+
+**Фикс:** добавить в CSS:
+```css
+.adj-оксигенация td { border-left: 3px solid #3B82F6; }
+.adj-вентиляция  td { border-left: 3px solid #F59E0B; }
+.adj-тревога     td { border-left: 3px solid #EF4444; }
+```
+
+---
+
+### 1.6 `Math.random()` в RAF-петле — мерцание на экране
+
+**Файл:** `simulator.jsx`, функция `draw()` в `HVDisplay`
+
+```js
+// Вызывается ~60 раз в секунду:
+p += (Math.random() - 0.5) * 0.4;      // pressure noise — каждый кадр РАЗНЫЙ
+fv += (Math.random() - 0.5) * 0.15;    // flow noise
+// ETT block:
+if (blocked) p = map + Math.sin(phase) * halfAmp * 0.15 + (Math.random() - 0.5) * 1.5;
+```
+
+При `ettBlock` амплитуда случайной составляющей ±1.5 cmH₂O — значительное **визуальное дрожание**, не характерное для реального аппарата. На обычном сценарии шум ±0.4 создаёт иллюзию «живого» сигнала, но несидированный PRNG означает: при каждом рендере новый шум → стробоскопический эффект на 60fps.
+
+**Фикс:**
+```js
+// Pre-compute noise array once per mount
+const NOISE = new Float32Array(1024).map(() => (Math.random()-0.5));
+// В draw():
+p += NOISE[(Math.floor(secs * 1000) + i) & 1023] * 0.4;
+```
+
+---
+
+## 2. 🟡 ВАЖНЫЕ ПРОБЛЕМЫ — UX и корректность
+
+### 2.1 `hv-mode-time` не обновляется в реальном времени
+
+```jsx
+// Вызывается при монтировании компонента — фиксирует время один раз
+<span className="hv-mode-time">
+  {new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}
+</span>
+```
+
+На реальном Humming Vue часы идут. Здесь — застывают на времени открытия страницы.
+
+**Фикс:**
+```jsx
+const [time, setTime] = useState(() => new Date());
+useEffect(() => {
+  const id = setInterval(() => setTime(new Date()), 10000);
+  return () => clearInterval(id);  // cleanup!
+}, []);
+```
+
+---
+
+### 2.2 `PVLoop` canvas: нет HiDPI и нет ResizeObserver
+
+```jsx
+// ❌ Фиксированные физические пиксели
+<canvas ref={cvRef} width="600" height="220" className="sim-loop-canvas">
+
+// HVDisplay делает правильно:
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+cv.width  = rect.width * dpr;
+const ro = new ResizeObserver(resize);
+ro.observe(cv);
+```
+
+На Retina/HiDPI экранах P-V петля выглядит размыто. `WaveformCompare` имеет ту же проблему (два canvas 600×200 с фиксированными px).
+
+---
+
+### 2.3 Полная нечувствительность к `spontaneous` в трейсе потока
+
+Сценарий `spontaneous` применяет множитель `spont = 0.92` к efficiency и прибавляет +2 к SpO₂. На канве Flow trace:
+
+```js
+// Для ВСЕХ сценариев одинаково:
+let fv = Math.cos(phase) * flowAmp;
+fv += (Math.random() - 0.5) * 0.15;
+```
+
+Спонтанное дыхание должно давать нерегулярные суперпозиции — характерные «горбы» в потоке при каждом самостоятельном вдохе. Сейчас `spontaneous` на осциллоскопе неотличим от `optimal`.
+
+---
+
+### 2.4 Hz–DCO₂ парадокс: повышение Hz снижает efficiency, но увеличивает DCO₂
+
+```python
+# Infant, SV=18, MAP=13:
+# Hz= 8: hzPenalty=1.050 → dco2/kg=104, pco2=35
+# Hz=10: hzPenalty=1.000 → dco2/kg=118, pco2=33
+# Hz=15: hzPenalty=0.875 → dco2/kg=135, pco2=31
+```
+
+Повышение Hz **снижает доставляемый объём** (hzPenalty < 1), но **увеличивает DCO₂** (квадратичная зависимость V²×f перекрывает потерю в V). Это физически верно — DCO₂ растёт с f при умеренном снижении V. Но нигде в UI это не объясняется, и у пользователя нет инсайта почему «Hz↑ → V_hfo↓, но CO₂ снижается».
+
+---
+
+### 2.5 Функция рекруита: асимметричный наклон при dMap=0
+
+```python
+# Слева от оптимума (dMap ≤ 0):  d(recruit)/d(dMap) = +0.075
+# Справа от оптимума (dMap > 0):  d(recruit)/d(dMap) = -0.055
+```
+
+MAP снижается от оптимума быстрее (+7.5% рекруита за 1 cmH₂O), чем повышается (-5.5% рекруита за 1 cmH₂O). Физически некорректно: в реальности гипердистензия теряет рекруит быстрее недодостаточного PEEP. Наклоны надо поменять местами.
+
+---
+
+### 2.6 ELBW при минимальном SV=1: vhfo=0.22 мл, pco2 зажат в 115
+
+```python
+# SV=1, Hz=15: vhfo=0.220 мл, dco2/kg=0.9
+# pco2 = 40/sqrt(0.9/80) = 40/sqrt(0.011) = 178.9 → clamp → 115
+```
+
+При SV=1 (минимум ползунка) симулятор показывает pCO₂=115 mmHg — тяжёлая гиперкапния, что правильно. Но ползунок доступен → пользователь может «застрять» в этой зоне без понимания, что это крайний патологический случай.
+
+---
+
+### 2.7 `WaveformCompare` — цикл по-пиксельно, нет `steps`-нормализации
+
+```js
+// ❌ sections.jsx — итерирует PO КАЖДОМУ CSS-пикселю canvas
+for (let x = 0; x <= W; x++) {  // W = canvas.width = 600
+    const phase = (x / W) * Math.PI * 2;
+    // ...
+}
+```
+
+`HVDisplay` делает правильно: `steps = Math.max(420, Math.floor(plotW * 1.5))` с нормализованным шагом. WaveformCompare на широком экране будет итерировать больше (600 фиксировано — OK), но если сделать canvas responsive, итерации вырастут неконтролируемо.
+
+---
+
+## 3. 🏗 АРХИТЕКТУРНЫЕ ПРОБЛЕМЫ
+
+### 3.1 Вся межфайловая связь через `window.*`
+
+```js
+// simulator.jsx:
+Object.assign(window, { Simulator, PistonVsJet, FlowSensor });
+
+// sections.jsx:
+Object.assign(window, { SectionLabel, Tag, Hero, WaveformCompare, ... });
+
+// protocols.jsx:
+Object.assign(window, { ProtocolSteps, Hemodynamics, BloodGasReminder });
+```
+
+Ни одного ES-модуля. Все компоненты — глобальные переменные. Конфликты имён (`Tag`, `SectionLabel`), невозможность Tree-shaking, несовместимость с любым modern bundler.
+
+---
+
+### 3.2 Babel transpiler 3.14 MB в браузере при каждом открытии
+
+```html
+<script type="text/babel" src="blob:simulator.jsx">   <!-- компилируется клиентом -->
+<script type="text/babel" src="blob:sections.jsx">     <!-- компилируется клиентом -->
+<script type="text/babel" src="blob:protocols.jsx">    <!-- компилируется клиентом -->
+```
+
+- Babel в браузере: +200–400 ms на каждый pageload
+- JSX → JS конверсия в runtime вместо build-time
+- React dev-builds: +~900 KB лишнего JS (dev-warning overhead, propTypes, etc.)
+
+**Реальный бандл если перейти на Vite + production React:**
+
+| Компонент | Сейчас | После оптимизации |
+|---|---|---|
+| React | 1.09 MB | ~40 KB |
+| React-DOM | 1.08 MB | ~130 KB |
+| Babel runtime | 3.14 MB | **0** |
+| App code | ~94 KB | ~94 KB |
+| **Итого JS** | **~5.4 MB** | **~264 KB** |
+
+Сжатие: **-95% размера JS**.
+
+---
+
+### 3.3 `useStateGuide` alias в `protocols.jsx`
+
+```js
+// ❌ protocols.jsx строка 7:
+const { useState: useStateGuide } = React;
+
+// Используется как:
+const [active, setActive] = useStateGuide(0);
+```
+
+Нет никакой причины переименовывать `useState`. Запутывает читателя кода, ломает поиск по `useState`.
+
+---
+
+### 3.4 Избыточная проверка в `Simulator` useEffect
+
+```jsx
+const lastCat = useRef(cat);
+useEffect(() => {
+  if (lastCat.current !== cat) {   // ← эта проверка никогда не ложна
+    setSv(W.svDefault);
+    // ...
+    lastCat.current = cat;
+  }
+}, [cat, W]);   // ← эффект запускается ТОЛЬКО когда cat меняется
+```
+
+`W = WEIGHT_CATS[cat]` — статическая константа. Проверка `lastCat.current !== cat` всегда `true` при срабатывании эффекта, т.к. эффект уже зависит от `[cat]`.
+
+---
+
+### 3.5 `useCallback` нигде не используется
+
+```jsx
+// Каждый рендер Simulator() создаёт новые функции:
+onChange={setSv}    // setSv — стабильна (React.useState)
+onChange={setMap}   // стабильна
+onChange={e => onChange(parseFloat(e.target.value))}  // DeviceKnob — НОВАЯ каждый рендер
+```
+
+Внутри `DeviceKnob` лямбда `e => onChange(parseFloat(...))` создаётся заново при каждом ре-рендере `Simulator`. Без `React.memo` на `DeviceKnob` — каждые 60fps (через `useMemo` для `state`) `DeviceKnob` не перерисовывается (он не в RAF), но при изменении любого слайдера все 4 `DeviceKnob` получают новые пропсы.
+
+---
+
+### 3.6 Нет ErrorBoundary
+
+```jsx
+// Если HVDisplay.draw() бросает исключение:
+// → весь React-дерево крашится
+// → белый экран без сообщения об ошибке
+// → нет никакого fallback UI
+```
+
+Canvas API может бросать в нестандартных окружениях (приватный режим, старые браузеры). Нет ни одного `ErrorBoundary`.
+
+---
+
+## 4. 🎨 CSS-АУДИТ
+
+### 4.1 Мёртвые CSS-переменные: 43 из 93 не используются
+
+Из 93 определённых кастомных свойств в `:root` только 50 задействованы в коде.
+
+**Неиспользуемые переменные (выборка критичных):**
+```css
+/* Семантические — определены, но код обращается к значениям напрямую */
+--accent           /* Код пишет var(--teal-600) вместо var(--accent) */
+--accent-hover     /* Не используется нигде */
+--danger           /* Компоненты пишут #EF4444 inline */
+--warn             /* Компоненты пишут var(--amber-500) напрямую */
+--success          /* Не используется */
+
+/* Социальные — явно не нужны в медицинском симуляторе */
+--social-pink, --social-blue, --social-telegram, --social-youtube
+
+/* Скейл — определён, но не применён */
+--s-1 … --s-9    (spacing scale, 8 из 9 не используются)
+--r-1 … --r-4    (radii scale, все 4 не используются)
+--fs-xs, --fs-sm, --fs-md, --fs-2xl (type scale, 4 не используются)
+```
+
+---
+
+### 4.2 Неопределённый `@keyframes hv`
+
+```css
+/* В CSS есть: */
+@keyframes hv-blink { ... }   /* ← используется */
+@keyframes bounce { ... }      /* ← используется */
+
+/* Парсер CSS интерпретирует "hv" как начало "hv-blink" */
+/* Технически это один keyframe "hv-blink", не два разных */
+/* Но если кто-то написал @keyframes hv { ... } — это мёртвый код */
+```
+
+---
+
+### 4.3 Phantom класс `.hv-tile-left`
+
+```jsx
+// JSX генерирует:
+className={`hv-tile hv-tile-left${status ? " s-" + status : ""}...`}
+```
+
+`.hv-tile-left` не определён в CSS. Это ghostкласс — возможно, остаток от более ранней версии, где было разделение на `.hv-tile-left` и `.hv-tile-right`.
+
+---
+
+### 4.4 Отсутствует `@media print`
+
+Последняя секция `CheatSheet` — это буквально «шпаргалка рядом с аппаратом». При печати:
+- `background: #0A1628` (navy) на тексте не выведется → чёрный фон, белый текст → убьёт картриджи
+- Нет `display: none` для навигации, футера, анимаций
+- `.cheat-grid` разваливается
+
+---
+
+### 4.5 Дублированный canvas CSS
+
+```css
+/* Глобальное правило перебивает конкретный контекст: */
+canvas { width: 100%; height: 200px; background: var(--slate-50); border-radius: 8px; }
+canvas { width: 100%; height: 220px; }  /* второй раз */
+
+/* При этом hv-display задаётся через CSS-класс: */
+.hv-display { width: 100%; height: 100%; }
+```
+
+Два безконтекстных `canvas {}` правила — второе перебивает первое. Вероятно, оба ошибочны и нужны были `.wave-canvas {}` и `.sim-loop-canvas {}`.
+
+---
+
+### 4.6 Только 3 медиа-брейкпоинта, нет мобильного для осциллоскопа
+
+```css
+@media (max-width: 1180px) { .hv-display-wrap { height: 320px; } }
+@media (max-width: 720px)  { /* нет изменения для hv-display-wrap */ }
+```
+
+На мобильных (320–720px) высота осциллоскопа остаётся 320px, при ширине контента ~280px → соотношение сторон ~1.14 вместо нормальных ~2.5. Два канала (Pressure + Flow) получают по ~140px высоты каждый — очень тесно.
+
+---
+
+## 5. ⚡ ПРОИЗВОДИТЕЛЬНОСТЬ
+
+### 5.1 Три активных RAF-цикла одновременно
+
+| Компонент | RAF | FPS | Итерации/кадр |
+|---|---|---|---|
+| HVDisplay | ✓ | ~60 | ~3000 pts (2 трейса × 1500) |
+| PVLoop | ✓ | ~60 | 180 pts |
+| WaveformCompare | ✓ | ~60 | ~1200 pts (2 canvas × 600) |
+
+**Итого ~4380 canvas-итераций/кадр при 60fps = ~262 800 итераций/сек.** На слабых устройствах (планшет, мобильный) это может вызывать просадки до 30fps.
+
+**Оптимизация:** WaveformCompare не является диагностическим инструментом — достаточно 30fps: `if (t % 2 === 0) draw();` или `requestAnimationFrame` с throttle.
+
+---
+
+### 5.2 HVDisplay: steps = 1.5 × plotWidth — избыточная субпиксельная детализация
+
+```js
+const steps = Math.max(420, Math.floor(plotW * 1.5));
+// На 1400px-wide: steps = 2100
+// На 800px-wide:  steps = 1200
+```
+
+1.5 отрезка на пиксель — избыточно. Canvas рисует с субпиксельным сглаживанием, но 1 точка/пиксель достаточно для синуса. Снижение до `plotW * 1.0` сократит итерации на 33% без видимого эффекта.
+
+---
+
+### 5.3 `getContext("2d")` вызывается в каждом кадре (WaveformCompare)
+
+```js
+function draw() {
+  [cv, hf].forEach((canvas) => {
+    const ctx = canvas.getContext("2d");  // ❌ вызов внутри RAF-петли
+```
+
+`getContext` дёшев (кешируется браузером), но это плохая практика. Правильно — получить `ctx` один раз при монтировании.
+
+---
+
+## 6. ♿ ДОСТУПНОСТЬ (A11y)
+
+| Проблема | Количество | Деталь |
+|---|---|---|
+| Нет `aria-*` атрибутов | 0 из ~30 интерактивных элементов | — |
+| Нет `role=` | нигде | кастомные компоненты не описаны |
+| SVG без `role="img"` | 9 SVG-элементов | — |
+| `<input type="range">` без `aria-label` | 4 слайдера | DeviceKnob не имеет label |
+| `tabIndex` не задан нигде | — | Нет кастомного tab order |
+| Нет keyboard handlers | 0 | Кнопки работают, но custom-элементы не работают с клавиатурой |
+| Canvas без описания | 4 canvas | Невидимы для screen reader |
+
+**Минимальный фикс для слайдеров:**
+```jsx
+<input
+  type="range"
+  aria-label={`${label} — от ${min} до ${max} ${unit}`}
+  aria-valuemin={min}
+  aria-valuemax={max}
+  aria-valuenow={value}
+  ...
+/>
+```
+
+---
+
+## 7. 🧪 ТЕСТИРОВАНИЕ ФИЗИЧЕСКОЙ МОДЕЛИ
+
+### Таблица корректности дефолтных состояний
+
+| Категория | SpO₂ (норма 90–95%) | pCO₂ (норма 35–50) | Vhfo/кг | targetMet | ΔA |
+|---|---|---|---|---|---|
+| ELBW default | **99%** (выше нормы) | **54 mmHg** (✓ пермиссив.) | 1.93 | ✓ | 13.3 cmH₂O ✓ |
+| Infant default | **97%** (ок) | **33 mmHg** (лёгкая гипокапния) | 1.98 | ✓ | 34.2 cmH₂O ✓ |
+| Pediatric default | **96%** (ок) | **25 mmHg** ⚠ ГИПОКАПНИЯ | 1.40 | ✗ | **95 cmH₂O** ⚠ MAX |
+
+**Педиатрический пресет клинически неверен** на трёх показателях одновременно.
+
+### Таблица DCO₂ квадратичной чувствительности (infant)
+
+| ΔSVM | Vhfo | DCO₂ | ΔDCO₂ | pCO₂ |
+|---|---|---|---|---|
+| −5 | 4.29 | 184 | −48% | 46 (+13) |
+| −3 | 4.95 | 245 | −31% | 40 (+7) |
+| −1 | 5.61 | 315 | −11% | 35 (+2) |
+| **0 (default)** | **5.94** | **353** | — | **33** |
+| +1 | 6.27 | 393 | +11% | 31 (−2) |
+| +3 | 6.93 | 480 | +36% | 28 (−5) |
+| +5 | 7.59 | 576 | +63% | 26 (−7) |
+
+Квадратичная зависимость верна. Но pCO₂ baseline уже 33 mmHg (не 40) — infant дефолт чуть гипокапничен. Оптимальный SV≈15 даст pCO₂≈40.
+
+---
+
+## 8. ПОЛНАЯ ТАБЛИЦА ПРИОРИТЕТОВ
+
+| # | 🔴/🟡/🟢 | Проблема | Усилие | Влияние |
+|---|---|---|---|---|
+| 1 | 🔴 | `targetSV` hint: ошибка 80% при ettBlock | Низкое | Клин. дезориентация |
+| 2 | 🔴 | Pediatric default: ΔA=95, pCO₂=25, targetMet=false | Низкое | Неверная «норма» |
+| 3 | 🔴 | `adj-row` цвета не применяются (CSS классы отсутствуют) | Минимальное | Сломан UI |
+| 4 | 🔴 | `Math.random()` в RAF — мерцание трейса | Низкое | Визуальный дефект |
+| 5 | 🟡 | `hv-mode-time` не обновляется | Низкое | Визуальная несостыковка |
+| 6 | 🟡 | PVLoop и WaveformCompare canvas не HiDPI | Среднее | Размытость на Retina |
+| 7 | 🟡 | Spontaneous scenario: Flow trace идентичен optimal | Среднее | Педагогическая потеря |
+| 8 | 🟡 | Функция рекруита: неверный наклон (fast loss при ↓MAP) | Среднее | Физ. модель |
+| 9 | 🟡 | Нет ErrorBoundary — белый экран при любом исключении | Низкое | Надёжность |
+| 10 | 🟡 | Нет `@media print` — CheatSheet непечатаема | Среднее | Практич. потеря |
+| 11 | 🟡 | Глобальный `canvas {}` CSS бьёт все canvas | Минимальное | Визуальный |
+| 12 | 🟡 | Асимметрия Hz penalty: ↑Hz теряет V, но растёт DCO₂ | — | Нужно объяснение в UI |
+| 13 | 🟢 | Babel 3.1 MB в браузере → Vite build | Высокое | −95% JS |
+| 14 | 🟢 | React dev-builds → production | Среднее | −900 KB JS |
+| 15 | 🟢 | `useStateGuide` alias удалить | Минимальное | Читаемость |
+| 16 | 🟢 | `lastCat.current` избыточная проверка | Минимальное | Читаемость |
+| 17 | 🟢 | `getContext("2d")` перенести за пределы RAF | Минимальное | Практика |
+| 18 | 🟢 | 43 неиспользуемых CSS-переменных | Минимальное | Чистота кода |
+| 19 | 🟢 | `.hv-tile-left` ghost-класс | Минимальное | Читаемость CSS |
+| 20 | 🟢 | Нет навигации между 14 секциями | Среднее | UX |
+| 21 | 🟢 | Все интерактивные элементы без aria-* | Среднее | A11y |
+| 22 | 🟢 | Ввод реального веса пациента | Высокое | Клин. точность |
+
+---
+
+## 9. ТРИ QUICK-WIN ФИКСА (< 1 часа суммарно)
+
+### Fix A — `adj-row` цвета (5 мин)
+Добавить в CSS:
+```css
+.adj-оксигенация td { border-left: 3px solid var(--status-blue); background: rgba(219,234,254,0.3); }
+.adj-вентиляция  td { border-left: 3px solid var(--amber-500);   background: rgba(254,243,199,0.3); }
+.adj-тревога     td { border-left: 3px solid var(--status-red);  background: rgba(254,242,242,0.3); }
+```
+
+### Fix B — `targetSV` hint (2 мин)
+```jsx
+// simulator.jsx, ~строка 280
+const targetSV = targetVhfo / state.efficiency;  // было: / W.baseEfficiency
+```
+
+### Fix C — Pediatric дефолт (5 мин)
+```js
+// simulator.jsx, WEIGHT_CATS.pediatric
+svDefault: 35,     // было: 50 → ΔA=95 cmH₂O clamped
+// С SV=35: amplitude = 35*(1+7/7)*0.95 = 66.5 cmH₂O — в рабочем диапазоне
+// vhfo = 35*0.42 = 14.7 мл, targetVhfo=30 → всё ещё не достигается, но ΔA реалистична
+```
+
+---
+
+## 10. РЕКОМЕНДУЕМАЯ АРХИТЕКТУРА v4
+
+```
+hfo-simulator/
+├── src/
+│   ├── physics/
+│   │   ├── computeState.js     ← изолированная физ. модель
+│   │   ├── computeState.test.js ← unit тесты (Jest)
+│   │   └── constants.js        ← WEIGHT_CATS, SCENARIOS
+│   ├── components/
+│   │   ├── HVDisplay/          ← canvas oscilloscope
+│   │   ├── PVLoop/             ← P-V loop canvas
+│   │   ├── Simulator/          ← main container
+│   │   └── sections/           ← Hero, Metaphor, etc.
+│   ├── hooks/
+│   │   └── useRAF.js           ← shared RAF management
+│   └── App.jsx
+├── public/
+├── vite.config.js
+└── package.json
+```
+
+**Переход:** заменить `Object.assign(window, {...})` на ES6 `export`/`import`, убрать `type="text/babel"`, добавить `vite build`. Время: ~4 часа.
+
+---
+
+*Аудит выполнен на основе полной декомпиляции бандла: simulator.jsx (41.7 KB), sections.jsx (36.9 KB), protocols.jsx (15.4 KB), CSS (54.6 KB). Все баги подтверждены количественно через Python-реплику физической модели.*

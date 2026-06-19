@@ -1,0 +1,294 @@
+/* HFO Explainer — Clinical guidance (English edition):
+   - ProtocolSteps: step-by-step workflow (start → recruit MAP → SV → wean)
+   - Hemodynamics: what to watch on hemodynamics
+   - BloodGasReminder: blood gas & transition back to conventional ventilation
+*/
+
+const { useState: useStateGuide } = React;
+
+/* ============================================================
+   ProtocolSteps — step-by-step methodology
+   ============================================================ */
+function ProtocolSteps() {
+  const [active, setActive] = useStateGuide(0);
+
+  const steps = [
+    {
+      n: "01",
+      title: "Start — assess the pathology",
+      tone: "navy",
+      icon: "🩺",
+      summary: "Look at the patient first, then turn the dials.",
+      points: [
+        { k: "What the patient has", v: "RDS / MAS / PPHN / pulmonary hemorrhage / BPD — each pathology has its own starting MAP and Hz." },
+        { k: "Weight", v: "Pick a category: 500–1000 g / 1–10 kg / >10 kg. Weight drives EVERYTHING — SV range, Hz, the V_hfo math, whether a flow sensor exists." },
+        { k: "Blood gas", v: "Arterial sample is mandatory. Without it you're ventilating blind. pH, pCO₂, pO₂, BE." },
+        { k: "Baseline", v: "Record before you start: SpO₂, HR, BP, urine output. Re-compare every 30–60 min in the first hours." },
+      ],
+      pitfall: "Don't start without an arterial line and stable hemodynamics. HFO is not a way to \"hide\" a patient.",
+    },
+    {
+      n: "02",
+      title: "MAP recruitment — find the optimum",
+      tone: "teal",
+      icon: "⤴",
+      summary: "MAP is the main oxygenation tool. Find the opening point → then the optimum point.",
+      points: [
+        { k: "Starting MAP", v: "2 cmH₂O above what it was on conventional ventilation (or 8–10 cm in a newborn with RDS). Keep FiO₂ at 90–100%." },
+        { k: "Going up (recruit)", v: "↑ MAP by 1–2 cm every 2–3 minutes. Watch SpO₂: it SHOULD rise. As long as it rises — keep going." },
+        { k: "Peak point", v: "You've reached maximum SpO₂ — that's the opening point. Note the MAP value." },
+        { k: "Down to the optimum", v: "Drop MAP by 1 cm every 2–3 minutes. SpO₂ starts to fall — go back +1 cm. That's your optimum." },
+        { k: "Sign of overdistension", v: "Measured MAP climbs on its own → alveoli are over-filled → perfusion suffers → SpO₂ falls, BP falls." },
+      ],
+      pitfall: "Don't rush the MAP wean. Better to sit at the optimum an extra 30 min and recheck blood gas than to re-open the lungs all over again.",
+    },
+    {
+      n: "03",
+      title: "SV — turn it with confidence",
+      tone: "amber",
+      icon: "↔",
+      summary: "Don't fear SV. It's the primary ventilation tool. Guides: V_hfo and blood gas.",
+      points: [
+        { k: "Starting SV", v: "So that V_hfo ≈ 1.7–2.0 mL/kg in severe disease. With spontaneous breathing or hypocapnia risk — 1.2–1.4 mL/kg." },
+        { k: "Control — excursion", v: "The chest should clearly \"ring\" — a fine high-frequency vibration down to the navel." },
+        { k: "Control — blood gas", v: "pCO₂ high → ↑ SV. pCO₂ low → ↓ SV. Change by 10–20%, recheck gas at 20–30 min." },
+        { k: "DCO₂", v: "= V_hfo² × f. Quadratic dependence on volume! A small SV change has a big effect on CO₂." },
+        { k: "Why with confidence", v: "The 13 µm piston gives an EXACT volume. You can't really get it wrong — you'll see it at once on V_hfo and blood gas. This isn't pressure that \"floats.\"" },
+      ],
+      pitfall: "If ΔA suddenly rises while V_hfo falls — don't turn SV higher. That's not a volume problem, it's mechanical. Go to step 06 (suction / compliance).",
+    },
+    {
+      n: "04",
+      title: "FiO₂ — drop it gradually",
+      tone: "purple",
+      icon: "O₂",
+      summary: "Start 90–100%. Reduce by 5% once SpO₂ is stable.",
+      points: [
+        { k: "Starting FiO₂", v: "90–100% during recruitment, to take the oxygen variable out of the equation." },
+        { k: "Weaning strategy", v: "Once you've found the optimal MAP and SpO₂ ≥ 92% steadily — drop FiO₂ by 5% every 30 min." },
+        { k: "Toxicity threshold", v: "FiO₂ > 60% for more than 6 hours — oxygen toxicity to alveolar cells. Don't linger." },
+        { k: "Main rule", v: "FiO₂ is not the main oxygenation tool. The main one is a properly chosen MAP. Good recruitment = less FiO₂." },
+      ],
+      pitfall: "Don't drop FiO₂ below 30% \"just in case\" — you need a reserve for suctioning and any maneuvers.",
+    },
+    {
+      n: "05",
+      title: "Hz — barely touch it",
+      tone: "blue",
+      icon: "Hz",
+      summary: "Hz is the \"coarse\" dial. Change it rarely. It keeps the system in tune.",
+      points: [
+        { k: "Starting Hz", v: "Preterm 15 Hz, term 10 Hz, children 7 Hz, adolescents 5 Hz. After that — barely touch it." },
+        { k: "When to lower Hz", v: "Very severe hypercapnia, SV already maxed — lowering Hz increases tidal volume per cycle." },
+        { k: "When to raise Hz", v: "Persistent hypocapnia, SV already at minimum — but this is a last resort." },
+        { k: "Why \"coarse\"", v: "Hz changes EVERYTHING at once: DCO₂ (linearly), gas trapping (risk above 15), chest resonance." },
+      ],
+      pitfall: "Don't turn Hz \"to make SpO₂ look nice.\" Hz is the last dial you reach for. SV first, then MAP, then FiO₂.",
+    },
+    {
+      n: "06",
+      title: "Suction — only when necessary",
+      tone: "red",
+      icon: "⚠",
+      summary: "Every suction = loss of the optimal MAP. Do it only when you truly must.",
+      points: [
+        { k: "When mandatory", v: "ΔA rose, V_hfo and DCO₂ crashed → the ETT is plugged with secretions. The chest stopped vibrating." },
+        { k: "What happens on suction", v: "Alveoli collapse → the PEEP effect is lost → the optimal MAP is lost. Afterward — recruit again." },
+        { k: "Closed system", v: "Use a closed (in-line) suction catheter — the lungs don't lose pressure as dramatically as with open suction." },
+        { k: "After suction", v: "Restore SpO₂ and MAP right away. 1–2 \"sustained inflations\" of 25–30 cmH₂O × 15 s, OR a slow MAP climb by 1 cm until SpO₂ returns to baseline." },
+        { k: "Prevention", v: "Adequate humidification/warming of gas (37°C, 100% humidity), normovolemia. A dry circuit = thick secretions." },
+      ],
+      pitfall: "\"Prophylactic\" suction every 4 hours with no indication is HARMFUL. You open the system, lose MAP, recruit again. Only by indication.",
+    },
+    {
+      n: "07",
+      title: "Coming off HFO — step by step",
+      tone: "green",
+      icon: "→",
+      summary: "Don't rush to wean. Lungs must be stable, gases normal, hemodynamics off support.",
+      points: [
+        { k: "Readiness criteria", v: "FiO₂ ≤ 30–35%, MAP ≤ 8–10 cmH₂O, V_hfo stable > 6 hours, blood gas normal, hemodynamics off vasopressors." },
+        { k: "Step 1 — lower MAP", v: "By 1 cm every 2–4 hours down to MAP ≈ 8 cm. Watch SpO₂. Don't fall below the recruitment point." },
+        { k: "Step 2 — to conventional ventilation", v: "PEEP = the last MAP. PIP — by a tidal volume of 4–6 mL/kg. Rate 30–40/min (in a newborn)." },
+        { k: "Step 3 — to non-invasive", v: "After a stable spell on conv. ventilation with PEEP 5–6 cm and FiO₂ ≤ 30% → nCPAP or nIPPV. Keep PEEP at the last level." },
+        { k: "What NOT to do", v: "Jump straight from HFO to CPAP, skipping conventional ventilation — high risk of derecruitment and reintubation." },
+      ],
+      pitfall: "A step back is not a failure. If SpO₂ falls or ΔA rises after a MAP drop — go back to the previous level and wait 4–6 hours.",
+    },
+  ];
+
+  const s = steps[active];
+
+  return (
+    <section className="block protocol" data-screen-label="07 Protocol">
+      <SectionLabel n="07" label="Protocol · Working stages with Humming Vue" />
+      <h2 className="block-title">
+        Seven steps <span className="accent">from start to weaning</span>.
+      </h2>
+      <p className="block-sub">
+        Pathology and blood gas first. Then MAP recruitment to the optimum. Then SV — confidently,
+        by the gases. FiO₂ — only after you've found the MAP. Hz — barely touch it. Suction — only
+        when you truly can't avoid it (and recruit again straight after). The move back to
+        conventional ventilation — in stages, not a "jump."
+      </p>
+
+      <div className="proto-tabs">
+        {steps.map((st, i) => (
+          <button
+            key={i}
+            className={`proto-tab proto-tone-${st.tone}${i === active ? " active" : ""}`}
+            onClick={() => setActive(i)}>
+            <span className="proto-tab-num">{st.n}</span>
+            <span className="proto-tab-icon">{st.icon}</span>
+            <span className="proto-tab-title">{st.title}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className={`proto-detail proto-tone-${s.tone}`}>
+        <div className="proto-detail-side">
+          <div className="proto-detail-num">{s.n}</div>
+          <div className="proto-detail-icon">{s.icon}</div>
+          <div className="proto-detail-title">{s.title}</div>
+          <div className="proto-detail-summary">{s.summary}</div>
+        </div>
+        <div className="proto-detail-main">
+          <ul className="proto-points">
+            {s.points.map((p, i) => (
+              <li key={i}>
+                <span className="proto-k">{p.k}</span>
+                <span className="proto-v">{p.v}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="proto-pitfall">
+            <span className="proto-pitfall-label">⚠ Don't get caught:</span>
+            <span>{s.pitfall}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   Hemodynamics — what to watch beyond ventilation
+   ============================================================ */
+function Hemodynamics() {
+  const items = [
+    {
+      head: "High MAP → venous return falls",
+      body: "High intrathoracic pressure compresses the vena cava and right atrium. The heart gets less blood → cardiac output falls → BP falls → SpO₂ may \"drop\" not from the lungs but from perfusion.",
+      sign: "BP ↓, HR ↑ compensatory, lactate ↑, urine output ↓",
+      rec: "Before raising MAP, assess volume status. If there's reserve — a 10 mL/kg saline bolus. If not — be ready for a vasopressor.",
+      tone: "amber",
+    },
+    {
+      head: "The right ventricle suffers first",
+      body: "High MAP compresses pulmonary capillaries → pulmonary vascular resistance rises → the right ventricle works against increased afterload. In newborns this is especially critical (PPHN).",
+      sign: "Echo: RV dilation, tricuspid regurgitation, flattened interventricular septum",
+      rec: "Echo monitoring when suspected. PPHN management: iNO 20 ppm, optimal oxygenation, avoid acidosis.",
+      tone: "red",
+    },
+    {
+      head: "Hypocapnia = cerebral vasoconstriction",
+      body: "In preterm infants a low pCO₂ reduces cerebral blood flow → risk of PVL (periventricular leukomalacia). On HFO it's easy to \"over-blow\" because of the quadratic DCO₂ dependence.",
+      sign: "pCO₂ < 35 mmHg — not normal, it's a danger",
+      rec: "Lower SV right away. Target pCO₂ 45–55 (permissive hypercapnia). Check blood gas every 30–60 min in the first hours.",
+      tone: "purple",
+    },
+    {
+      head: "Preload and volume status",
+      body: "HFO means constant positive pressure in the chest. A hypovolemic patient on HFO decompensates fast. Before starting — assess volume: capillary refill time, urine output, lactate.",
+      sign: "CRT > 3 s, urine output < 1 mL/kg/h, lactate > 2 mmol/L",
+      rec: "Top up before starting HFO or in parallel. Don't \"mask\" hypovolemia by raising MAP — it gets worse.",
+      tone: "blue",
+    },
+    {
+      head: "What to monitor continuously",
+      body: "No less often than the device parameters. Hemodynamics and ventilation are one system.",
+      sign: "Invasive BP · pre/post-ductal SpO₂ · HR · hourly urine · lactate every 4–6 h · echo on destabilization",
+      rec: "Trends matter more than single readings. A 10% BP drop over an hour is a reason to look at what's changing in the lungs.",
+      tone: "teal",
+    },
+  ];
+
+  return (
+    <section className="block block-tinted hemo" data-screen-label="08 Hemodynamics">
+      <SectionLabel n="08" label="Hemodynamics · What you can't miss" />
+      <h2 className="block-title">
+        Lungs and heart — <span className="accent">one system</span>.
+      </h2>
+      <p className="block-sub">
+        HFO isn't only ventilation. Positive mean pressure in the chest presses on the heart and
+        great vessels. If you're not watching hemodynamics, you're missing half the picture.
+        These are general guides; specific decisions depend on the case and the patient.
+      </p>
+
+      <div className="hemo-grid">
+        {items.map((it, i) => (
+          <div key={i} className={`hemo-card hemo-tone-${it.tone}`}>
+            <div className="hemo-head">{it.head}</div>
+            <div className="hemo-body">{it.body}</div>
+            <div className="hemo-sign">
+              <span className="hemo-sign-label">Signs</span>
+              <span>{it.sign}</span>
+            </div>
+            <div className="hemo-rec">
+              <span className="hemo-rec-label">Recommendation</span>
+              <span>{it.rec}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   BloodGasReminder — short block on blood gas
+   ============================================================ */
+function BloodGasReminder() {
+  return (
+    <section className="block kshchs-block" data-screen-label="09 BloodGas">
+      <SectionLabel n="09" label="Blood gas · Arterial sample — mandatory" />
+      <div className="kshchs-grid">
+        <div className="kshchs-main">
+          <h2 className="block-title" style={{margin: "0 0 24px"}}>
+            The cardinal rule of HFO —<br/>
+            <span className="accent">timely blood-gas correction</span>.
+          </h2>
+          <p className="block-sub" style={{maxWidth: "none"}}>
+            On HFO you manage not what you hear through the stethoscope, but what the arterial blood
+            shows. Without it — you ventilate blind. Venous blood is unreliable for oxygenation;
+            take it only in extremis for a pCO₂ trend.
+          </p>
+        </div>
+
+        <div className="kshchs-stack">
+          <div className="kshchs-rule">
+            <div className="kshchs-rule-when">HFO start</div>
+            <div className="kshchs-rule-what">Arterial line — before switching to HFO. Blood gas before you start.</div>
+          </div>
+          <div className="kshchs-rule">
+            <div className="kshchs-rule-when">First 2 hours</div>
+            <div className="kshchs-rule-what">Blood gas every 30 min. Change SV and MAP by the gases, not "by eye."</div>
+          </div>
+          <div className="kshchs-rule">
+            <div className="kshchs-rule-when">Stabilization</div>
+            <div className="kshchs-rule-what">Blood gas every 4–6 hours. Plus — on any parameter change.</div>
+          </div>
+          <div className="kshchs-rule">
+            <div className="kshchs-rule-when">Targets</div>
+            <div className="kshchs-rule-what">
+              pH 7.25–7.40 · pCO₂ 45–55 (permissive hypercapnia) · pO₂ 50–80 (newborns) ·
+              BE −4 to +4
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+Object.assign(window, { ProtocolSteps, Hemodynamics, BloodGasReminder });
