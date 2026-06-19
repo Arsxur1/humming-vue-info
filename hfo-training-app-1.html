@@ -193,6 +193,70 @@
   footer .dot{opacity:.5}
   .disc{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:10px;
     padding:10px 13px;margin-top:14px;font-size:11.5px;color:#ffce80;font-family:var(--mono);line-height:1.5}
+
+  /* ---------- Simulator ---------- */
+  .simwrap{display:grid;gap:14px}
+  @media(min-width:720px){.simwrap{grid-template-columns:1.05fr .95fr}}
+  .screen{background:#06101e;border:1px solid var(--teal-d);border-radius:14px;padding:14px;
+    box-shadow:inset 0 0 40px rgba(13,148,136,.12)}
+  .scrtop{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);
+    font-size:10px;letter-spacing:1.5px;color:var(--teal);margin-bottom:8px}
+  .scrtop .live{display:flex;align-items:center;gap:6px}
+  .scrtop .ld{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  canvas#osc{display:block;width:100%;height:120px;background:#040b15;border-radius:9px;border:1px solid var(--line)}
+  .readouts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .rd{background:#0a1726;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .rd .rk{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--mut2);text-transform:uppercase}
+  .rd .rv{font-family:var(--mono);font-size:21px;font-weight:600;line-height:1.1;margin-top:2px}
+  .rd .ru2{font-size:11px;color:var(--mut)}
+  .knobs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .knob{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:13px;padding:12px}
+  .knob .kl2{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
+  .knob .kval{font-family:var(--mono);font-size:25px;font-weight:700;margin:4px 0 9px;display:flex;align-items:baseline;gap:5px}
+  .knob .ku{font-size:12px;color:var(--mut)}
+  .kbtns{display:flex;gap:8px}
+  .kbtns button{flex:1;background:var(--bg2);border:1px solid var(--line2);color:var(--txt);
+    font-size:20px;font-weight:700;border-radius:9px;padding:5px 0;cursor:pointer;transition:.12s;font-family:var(--mono)}
+  .kbtns button:hover{border-color:var(--teal);background:rgba(20,184,166,.12)}
+  .kbtns button:active{transform:scale(.94)}
+  .simhint{margin-top:12px;border-radius:11px;padding:12px 14px;font-size:14px;display:flex;gap:9px;align-items:flex-start}
+  .simhint .hi{font-size:17px;flex:0 0 auto}
+  .simhint.ok{background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.4);color:#bff3dd}
+  .simhint.warn{background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.4);color:#ffdca0}
+  .simtask{font-size:12.5px;color:var(--mut);font-family:var(--mono);background:var(--bg2);
+    border-left:3px solid var(--teal);border-radius:8px;padding:9px 12px;margin-bottom:14px;line-height:1.5}
+
+  /* ---------- Certificate ---------- */
+  .cert{background:linear-gradient(135deg,#0c2238,#0a1830);border:2px solid var(--teal);
+    border-radius:18px;padding:30px 26px;text-align:center;position:relative;overflow:hidden;margin-top:6px}
+  .cert::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(500px 200px at 50% -20%,rgba(168,240,60,.10),transparent 70%);pointer-events:none}
+  .cert-wave{color:var(--teal);font-family:var(--mono);letter-spacing:4px;opacity:.5;font-size:14px}
+  .cert-seal{font-size:34px;margin:4px 0}
+  .cert-title{font-family:var(--mono);letter-spacing:7px;font-size:15px;color:var(--lime);font-weight:700;margin-top:4px}
+  .cert-awarded{color:var(--mut);font-size:13px;margin:14px 0 8px}
+  .cert-name{background:transparent;border:none;border-bottom:2px dashed var(--line2);color:var(--txt);
+    font-family:var(--sans);font-weight:800;font-size:26px;text-align:center;padding:4px 8px;width:100%;max-width:420px;outline:none}
+  .cert-name:focus{border-color:var(--teal)}
+  .cert-body{color:var(--mut);font-size:13px;margin:12px 0 4px}
+  .cert-course{font-weight:800;font-size:17px;color:var(--txt)}
+  .cert-meta{display:flex;justify-content:center;gap:22px;margin-top:18px;font-family:var(--mono);
+    font-size:12px;color:var(--mut)}
+  .cert-meta b{color:var(--teal)}
+  .cert-brand{margin-top:18px;font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--mut2)}
+
+  @media print{
+    body{background:#fff}
+    header,footer,nav,.tabs,.no-print,.btnrow{display:none!important}
+    body *{visibility:hidden}
+    #cert,#cert *{visibility:visible}
+    #cert{position:absolute;left:0;right:0;top:30px;margin:auto;max-width:680px;
+      background:#fff;border-color:#0D9488;color:#0a1628}
+    #cert .cert-title{color:#0D9488}#cert .cert-name,#cert .cert-course{color:#0a1628}
+    #cert .cert-awarded,#cert .cert-body,#cert .cert-meta{color:#475569}
+  }
 </style>
 </head>
 <body>
@@ -220,7 +284,7 @@
 /* ---------- i18n: интерфейс ---------- */
 const UI = {
   ru:{
-    nav:{home:"Главная",lessons:"Уроки",test:"Тест",scenarios:"Сценарии",cards:"Карточки",mistakes:"Ошибки"},
+    nav:{home:"Главная",lessons:"Уроки",simulator:"Тренажёр",test:"Тест",scenarios:"Сценарии",cards:"Карточки",mistakes:"Ошибки"},
     heroEye:"Учебный курс · для врачей и медсестёр ОРИТН",
     heroTitle:["Высокочастотная вентиляция","за 30 минут."],
     heroSub:"Полный курс по работе на аппарате Metran Humming Vue в режиме HFO: короткие уроки, тест с оценкой, клинические сценарии, карточки и разбор типичных ошибок. Прогресс сохраняется в этом браузере.",
@@ -232,7 +296,28 @@ const UI = {
       test:{t:"Тест с оценкой",d:"12 вопросов. Порог сдачи — 80%. В конце — баллы и разбор ошибок."},
       scenarios:{t:"Клинические сценарии",d:"Газы крови и витальные показатели на экране — выбери правильное действие. С обратной связью."},
       cards:{t:"Карточки",d:"Двенадцать карточек для быстрого запоминания норм, формул и правил. Нажми, чтобы перевернуть."},
-      mistakes:{t:"Разбор ошибок",d:"Шесть вещей, на которых спотыкаются все. «Делай / Не делай» и почему."}
+      mistakes:{t:"Разбор ошибок",d:"Шесть вещей, на которых спотыкаются все. «Делай / Не делай» и почему."},
+      simulator:{t:"Тренажёр параметров",d:"Живая панель аппарата: крути SV, MAP, f, FiO₂ и вес — смотри, как меняются V_hfo, DCO₂ и амплитуда."}
+    },
+    sim:{
+      title:"Тренажёр параметров",
+      sub:"Крути четыре настройки и вес пациента — наблюдай за авто-показателями и осцилляцией. Учебная модель.",
+      task:"Задача: добейся V_hfo 1.5–2.0 мл/кг и DCO₂ в зелёной зоне, удерживая MAP 8–14 см H₂O.",
+      set:"Настройки",read:"Авто-показатели",weight:"Вес",reset:"Сбросить",perkg:"мл/кг",live:"HFO · ACTIVE",
+      hint:{
+        low:"Колебания слабые (V_hfo < 1.2 мл/кг) — CO₂ будет расти. Повышай SV.",
+        ok:"Хорошая вентиляция: V_hfo в целевом диапазоне, грудная клетка вибрирует до пупка.",
+        high:"Перевентиляция (V_hfo > 2.2 мл/кг) — риск гипокапнии. Снижай SV.",
+        mapLow:"MAP низкий (< 6) — риск ателектаза, лёгкие недораскрыты. Повышай MAP.",
+        mapHigh:"MAP высокий (> 16) — риск перерастяжения и падения перфузии. Снижай MAP."
+      }
+    },
+    cert:{
+      earn:"🎓 Получить сертификат",hide:"Скрыть сертификат",
+      title:"СЕРТИФИКАТ",awarded:"подтверждает, что",name:"Введите имя",
+      body:"успешно прошёл(-ла) учебный курс",
+      course:"HFO · Metran Humming Vue · Обучение №1",
+      scoreL:"Результат",dateL:"Дата",print:"🖨 Печать / сохранить PDF"
     },
     lessonsTitle:"Уроки",
     lessonsSub:"Семь уроков по порядку. Прочитанные отмечаются зелёным.",
@@ -263,7 +348,7 @@ const UI = {
     footer:"Humming Vue · HFO · Учебный модуль №1"
   },
   en:{
-    nav:{home:"Home",lessons:"Lessons",test:"Test",scenarios:"Scenarios",cards:"Cards",mistakes:"Mistakes"},
+    nav:{home:"Home",lessons:"Lessons",simulator:"Simulator",test:"Test",scenarios:"Scenarios",cards:"Cards",mistakes:"Mistakes"},
     heroEye:"Training course · for NICU clinicians",
     heroTitle:["High-frequency ventilation","in 30 minutes."],
     heroSub:"A complete course on running the Metran Humming Vue in HFO mode: short lessons, a graded test, clinical scenarios, flashcards and a review of common mistakes. Progress is saved in this browser.",
@@ -275,7 +360,28 @@ const UI = {
       test:{t:"Graded test",d:"12 questions. Pass mark 80%. Score and an answer review at the end."},
       scenarios:{t:"Clinical scenarios",d:"Blood gases and vitals on screen — pick the correct action. With feedback."},
       cards:{t:"Flashcards",d:"Twelve cards for quick recall of targets, formulas and rules. Tap to flip."},
-      mistakes:{t:"Mistake review",d:"Six things everyone trips over. Do / Don't, and why."}
+      mistakes:{t:"Mistake review",d:"Six things everyone trips over. Do / Don't, and why."},
+      simulator:{t:"Parameter simulator",d:"A live device panel: turn SV, MAP, f, FiO₂ and weight — watch V_hfo, DCO₂ and amplitude change."}
+    },
+    sim:{
+      title:"Parameter simulator",
+      sub:"Turn the four settings and the patient weight — watch the auto-readouts and the oscillation. Teaching model.",
+      task:"Goal: reach V_hfo 1.5–2.0 mL/kg and a DCO₂ in the green zone while keeping MAP 8–14 cmH₂O.",
+      set:"Settings",read:"Auto-readouts",weight:"Weight",reset:"Reset",perkg:"mL/kg",live:"HFO · ACTIVE",
+      hint:{
+        low:"Oscillations weak (V_hfo < 1.2 mL/kg) — CO₂ will rise. Increase SV.",
+        ok:"Good ventilation: V_hfo is in range, the chest vibrates down to the navel.",
+        high:"Over-ventilation (V_hfo > 2.2 mL/kg) — hypocapnia risk. Lower SV.",
+        mapLow:"MAP low (< 6) — atelectasis risk, lungs under-recruited. Raise MAP.",
+        mapHigh:"MAP high (> 16) — overdistension and falling perfusion risk. Lower MAP."
+      }
+    },
+    cert:{
+      earn:"🎓 Get a certificate",hide:"Hide certificate",
+      title:"CERTIFICATE",awarded:"certifies that",name:"Enter your name",
+      body:"has successfully completed the course",
+      course:"HFO · Metran Humming Vue · Training #1",
+      scoreL:"Score",dateL:"Date",print:"🖨 Print / save as PDF"
     },
     lessonsTitle:"Lessons",
     lessonsSub:"Seven lessons in order. Read ones turn green.",
@@ -306,7 +412,7 @@ const UI = {
     footer:"Humming Vue · HFO · Training module #1"
   },
   uz:{
-    nav:{home:"Bosh sahifa",lessons:"Darslar",test:"Test",scenarios:"Vaziyatlar",cards:"Kartochkalar",mistakes:"Xatolar"},
+    nav:{home:"Bosh sahifa",lessons:"Darslar",simulator:"Trenajyor",test:"Test",scenarios:"Vaziyatlar",cards:"Kartochkalar",mistakes:"Xatolar"},
     heroEye:"O‘quv kursi · YaRITB shifokorlari uchun",
     heroTitle:["Yuqori chastotali ventilyatsiya","30 daqiqada."],
     heroSub:"Metran Humming Vue apparatida HFO rejimida ishlash bo‘yicha to‘liq kurs: qisqa darslar, baholanadigan test, klinik vaziyatlar, kartochkalar va keng tarqalgan xatolar tahlili. Natija shu brauzerda saqlanadi.",
@@ -318,7 +424,28 @@ const UI = {
       test:{t:"Baholanadigan test",d:"12 ta savol. O‘tish chegarasi — 80%. Oxirida ball va xatolar tahlili."},
       scenarios:{t:"Klinik vaziyatlar",d:"Qon gazlari va hayotiy ko‘rsatkichlar ekranda — to‘g‘ri harakatni tanlang. Izoh bilan."},
       cards:{t:"Kartochkalar",d:"Me'yor, formula va qoidalarni tez yodlash uchun o‘n ikkita kartochka. Aylantirish uchun bosing."},
-      mistakes:{t:"Xatolar tahlili",d:"Hamma qoqiladigan oltita narsa. «Qil / Qilma» va nega."}
+      mistakes:{t:"Xatolar tahlili",d:"Hamma qoqiladigan oltita narsa. «Qil / Qilma» va nega."},
+      simulator:{t:"Parametrlar trenajyori",d:"Jonli apparat paneli: SV, MAP, f, FiO₂ va vaznni burang — V_hfo, DCO₂ va amplituda o‘zgarishini kuzating."}
+    },
+    sim:{
+      title:"Parametrlar trenajyori",
+      sub:"To‘rt sozlama va bemor vaznini burang — avto-ko‘rsatkichlar va ostsillyatsiyani kuzating. O‘quv modeli.",
+      task:"Maqsad: MAP 8–14 sm H₂O da ushlab, V_hfo 1.5–2.0 ml/kg va yashil zonadagi DCO₂ ga erishing.",
+      set:"Sozlamalar",read:"Avto-ko‘rsatkichlar",weight:"Vazn",reset:"Tozalash",perkg:"ml/kg",live:"HFO · ACTIVE",
+      hint:{
+        low:"Tebranishlar kuchsiz (V_hfo < 1.2 ml/kg) — CO₂ ortadi. SV ni oshiring.",
+        ok:"Yaxshi ventilyatsiya: V_hfo me'yorda, ko‘krak kindikgacha tebranadi.",
+        high:"Ortiqcha ventilyatsiya (V_hfo > 2.2 ml/kg) — gipokapniya xavfi. SV ni pasaytiring.",
+        mapLow:"MAP past (< 6) — atelektaz xavfi, o‘pka to‘liq ochilmagan. MAP ni oshiring.",
+        mapHigh:"MAP yuqori (> 16) — ortiqcha cho‘zilish va perfuziya pasayishi xavfi. MAP ni pasaytiring."
+      }
+    },
+    cert:{
+      earn:"🎓 Sertifikat olish",hide:"Sertifikatni yashirish",
+      title:"SERTIFIKAT",awarded:"tasdiqlaydiki,",name:"Ismingizni kiriting",
+      body:"o‘quv kursini muvaffaqiyatli yakunladi",
+      course:"HFO · Metran Humming Vue · O‘qish №1",
+      scoreL:"Natija",dateL:"Sana",print:"🖨 Chop etish / PDF saqlash"
     },
     lessonsTitle:"Darslar",
     lessonsSub:"Yetti dars tartib bilan. O‘qilganlari yashil bo‘ladi.",
@@ -727,7 +854,31 @@ const store={
 let lang = store.get("lang","ru");
 if(!LANGS.includes(lang)) lang="ru";
 let view = "home";
-const state = {lesson:0, quizAns:{}, quizDone:false, scnIdx:0, scnAns:null, scnSeen:{}};
+const state = {lesson:0, quizAns:{}, quizDone:false, scnIdx:0, scnAns:null, scnSeen:{}, showCert:false};
+
+/* ---------- Simulator model ---------- */
+const SIM_DEF={sv:6.0, map:12, f:10, fio2:40, weight:3.0};
+const SIM_STEP={sv:0.2, map:1, f:1, fio2:5, weight:0.5};
+const SIM_MIN={sv:0.2, map:3, f:5, fio2:21, weight:0.5};
+const SIM_MAX={sv:20, map:40, f:17, fio2:100, weight:5};
+let simState=Object.assign({},SIM_DEF);
+let simRaf=null;
+function simCompute(){
+  const s=simState;
+  const vhfo=Math.max(0.05, s.sv*(1.05-0.012*s.f));   // учебная модель: ↓f → ↑объём
+  const dco2=Math.round(vhfo*vhfo*s.f);               // DCO₂ = V_hfo² × f
+  const dA=Math.round(s.sv*3.7);                       // амплитуда ~ следствие SV
+  const perkg=vhfo/s.weight;
+  return {vhfo,dco2,dA,perkg,mapM:s.map};
+}
+function simHint(c){
+  const s=simState;
+  if(s.map<6)  return ["mapLow","warn","⚠"];
+  if(s.map>16) return ["mapHigh","warn","⚠"];
+  if(c.perkg<1.2) return ["low","warn","↓"];
+  if(c.perkg>2.2) return ["high","warn","↑"];
+  return ["ok","ok","✓"];
+}
 
 function t(){return UI[lang];}
 function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
@@ -739,6 +890,7 @@ function moduleStatus(){
   const p=getProg();
   return {
     lessons: p.lessons.length>=LESSONS[lang].length,
+    simulator: !!(p.done&&p.done.simulator),
     test: p.testBest!==null && p.testBest>=80,
     scenarios: (p.scn||[]).length>=SCEN[lang].length,
     cards: !!(p.done&&p.done.cards),
@@ -746,7 +898,7 @@ function moduleStatus(){
   };
 }
 function overallPct(){
-  const s=moduleStatus();const arr=[s.lessons,s.test,s.scenarios,s.cards,s.mistakes];
+  const s=moduleStatus();const arr=[s.lessons,s.simulator,s.test,s.scenarios,s.cards,s.mistakes];
   return Math.round(arr.filter(Boolean).length/arr.length*100);
 }
 
@@ -756,13 +908,13 @@ function renderChrome(){
   document.getElementById("langs").innerHTML=LANGS.map(l=>
     `<button class="${l===lang?'on':''}" onclick="setLang('${l}')">${l.toUpperCase()}</button>`).join("");
   const n=t().nav;const st=moduleStatus();
-  const tabs=[["home",n.home,""],["lessons",n.lessons,st.lessons],["test",n.test,st.test],
-    ["scenarios",n.scenarios,st.scenarios],["cards",n.cards,st.cards],["mistakes",n.mistakes,st.mistakes]];
+  const tabs=[["home",n.home,""],["lessons",n.lessons,st.lessons],["simulator",n.simulator,st.simulator],
+    ["test",n.test,st.test],["scenarios",n.scenarios,st.scenarios],["cards",n.cards,st.cards],["mistakes",n.mistakes,st.mistakes]];
   document.getElementById("tabs").innerHTML=tabs.map(([id,lbl,done])=>
     `<button class="tab ${view===id?'on':''}" onclick="go('${id}')">${lbl}${done?'<span class="dot"></span>':''}</button>`).join("");
 }
-function setLang(l){lang=l;store.set("lang",l);state.quizAns={};state.quizDone=false;state.scnAns=null;render();}
-function go(v){view=v;state.quizAns={};state.quizDone=false;state.scnAns=null;window.scrollTo(0,0);render();}
+function setLang(l){lang=l;store.set("lang",l);state.quizAns={};state.quizDone=false;state.scnAns=null;state.showCert=false;render();}
+function go(v){view=v;state.quizAns={};state.quizDone=false;state.scnAns=null;state.showCert=false;window.scrollTo(0,0);render();}
 
 /* ---------- views ---------- */
 function viewHome(){
@@ -795,6 +947,7 @@ function viewHome(){
     </section>
     <div class="grid g2" style="margin-top:22px">
       ${card('lessons','📘',m.lessons,`${p.lessons.length}/${LESSONS[lang].length}`)}
+      ${card('simulator','🎛',m.simulator,'')}
       ${card('test','🎓',m.test,testMeta)}
       ${card('scenarios','🩺',m.scenarios,`${(p.scn||[]).length}/${SCEN[lang].length}`)}
       ${card('cards','🃏',m.cards,'')}
@@ -883,13 +1036,120 @@ function viewResult(){
       <p class="sub" style="margin:8px auto 0">${pass?t().passMsg:t().failMsg}</p>
       <div class="btnrow" style="justify-content:center">
         <button class="btn" onclick="retryTest()">${t().retry}</button>
-        <button class="btn ghost" onclick="go('lessons')">${t().toLessons}</button>
+        ${pass?`<button class="btn ghost" onclick="toggleCert()">${state.showCert?t().cert.hide:t().cert.earn}</button>`:`<button class="btn ghost" onclick="go('lessons')">${t().toLessons}</button>`}
       </div>
     </div>
+    ${pass&&state.showCert?certBlock(pct):''}
     <h2 class="sec" style="margin-top:24px">${t().review}</h2>
     ${review}`;
 }
 function retryTest(){state.quizAns={};state.quizDone=false;window.scrollTo(0,0);render();}
+function toggleCert(){state.showCert=!state.showCert;render();if(state.showCert)setTimeout(()=>{const e=document.getElementById('cert');if(e)e.scrollIntoView({behavior:'smooth',block:'center'});},60);}
+function certBlock(pct){
+  const c=t().cert;const nm=store.get("certname","");
+  const d=new Date().toLocaleDateString(lang==='en'?'en-GB':(lang==='uz'?'uz':'ru-RU'));
+  return `
+    <div id="cert" class="cert">
+      <div class="cert-wave">∿∿∿∿∿∿∿∿∿</div>
+      <div class="cert-seal">🎓</div>
+      <div class="cert-title">${c.title}</div>
+      <div class="cert-awarded">${c.awarded}</div>
+      <input id="certname" class="cert-name" placeholder="${c.name}" value="${esc(nm)}" oninput="store.set('certname',this.value)">
+      <div class="cert-body">${c.body}</div>
+      <div class="cert-course">${c.course}</div>
+      <div class="cert-meta"><span>${c.scoreL}: <b>${pct}%</b></span><span>${c.dateL}: <b>${d}</b></span></div>
+      <div class="cert-brand">HUMMING VUE · HFO · swanston.uz</div>
+    </div>
+    <div class="btnrow no-print" style="justify-content:center"><button class="btn" onclick="printCert()">${c.print}</button></div>`;
+}
+function printCert(){const n=document.getElementById('certname');if(n)store.set('certname',n.value);window.print();}
+
+/* ---------- Simulator view ---------- */
+function viewSimulator(){
+  const s=simState;const c=simCompute();const[hk,cls,ic]=simHint(c);
+  const fmt=(k,v)=>k==='sv'||k==='weight'?v.toFixed(1):String(Math.round(v));
+  const knob=(key,label,color)=>`
+    <div class="knob">
+      <div class="kl2">${label}</div>
+      <div class="kval" style="color:${color}"><span id="v_${key}">${fmt(key,s[key])}</span></div>
+      <div class="kbtns"><button onclick="simAdj('${key}',-1)">−</button><button onclick="simAdj('${key}',1)">+</button></div>
+    </div>`;
+  return `
+    <div class="eyebrow">${t().sim.title}</div>
+    <h2 class="sec">${t().sim.sub}</h2>
+    <div class="simtask">★ ${t().sim.task}</div>
+    <div class="simwrap">
+      <div class="screen">
+        <div class="scrtop"><span>${t().sim.live}</span><span class="live"><span class="ld"></span>LIVE</span></div>
+        <canvas id="osc"></canvas>
+        <div class="readouts">
+          <div class="rd"><div class="rk">V_hfo</div><div class="rv" style="color:var(--teal)"><span id="v_vhfo">${c.vhfo.toFixed(1)}</span> <span class="ru2">мл · <span id="v_perkg">${c.perkg.toFixed(1)}</span> ${t().sim.perkg}</span></div></div>
+          <div class="rd"><div class="rk">DCO₂</div><div class="rv" style="color:var(--lime)" id="v_dco2">${c.dco2}</div></div>
+          <div class="rd"><div class="rk">ΔA</div><div class="rv" id="v_dA">${c.dA}</div></div>
+          <div class="rd"><div class="rk">MAP ${lang==='ru'?'измер':'meas'}</div><div class="rv" style="color:#8fbcff"><span id="v_mapM">${c.mapM}</span> <span class="ru2">cmH₂O</span></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="color:var(--mut);margin-bottom:8px">${t().sim.set}</div>
+        <div class="knobs">
+          ${knob('sv','SV · мл','var(--amber)')}
+          ${knob('map','MAP · cmH₂O','var(--teal)')}
+          ${knob('f','f · Гц','#fff')}
+          ${knob('fio2','FiO₂ · %','#8fbcff')}
+        </div>
+        <div class="knobs" style="grid-template-columns:1fr;margin-top:10px">
+          ${knob('weight',''+t().sim.weight+' · кг','var(--purple)')}
+        </div>
+        <div class="btnrow" style="margin-top:12px"><button class="btn ghost" onclick="simReset()">${t().sim.reset}</button></div>
+      </div>
+    </div>
+    <div class="simhint ${cls}" id="simhint"><span class="hi">${ic}</span><span id="simhinttext">${t().sim.hint[hk]}</span></div>`;
+}
+function simClamp(key){simState[key]=Math.min(SIM_MAX[key],Math.max(SIM_MIN[key],Math.round(simState[key]/SIM_STEP[key])*SIM_STEP[key]));}
+function simAdj(key,dir){simState[key]=simState[key]+dir*SIM_STEP[key];simClamp(key);markDone('simulator');simRefresh();}
+function simReset(){Object.assign(simState,SIM_DEF);simRefresh();}
+function simRefresh(){
+  const s=simState;const c=simCompute();
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  set('v_sv',s.sv.toFixed(1));set('v_map',Math.round(s.map));set('v_f',Math.round(s.f));
+  set('v_fio2',Math.round(s.fio2));set('v_weight',s.weight.toFixed(1));
+  set('v_vhfo',c.vhfo.toFixed(1));set('v_perkg',c.perkg.toFixed(1));
+  set('v_dco2',c.dco2);set('v_dA',c.dA);set('v_mapM',c.mapM);
+  const[hk,cls,ic]=simHint(c);
+  const hint=document.getElementById('simhint');
+  if(hint){hint.className='simhint '+cls;
+    const ht=document.getElementById('simhinttext');if(ht)ht.textContent=t().sim.hint[hk];
+    const hi=hint.querySelector('.hi');if(hi)hi.textContent=ic;}
+}
+function simStop(){if(simRaf){cancelAnimationFrame(simRaf);simRaf=null;}}
+function simStart(){
+  simStop();
+  const cv=document.getElementById('osc');if(!cv)return;
+  const ctx=cv.getContext('2d');const dpr=window.devicePixelRatio||1;
+  function size(){cv.width=Math.max(1,cv.clientWidth*dpr);cv.height=Math.max(1,cv.clientHeight*dpr);}
+  size();
+  const t0=performance.now();
+  function frame(now){
+    if(view!=='simulator'){simStop();return;}
+    if(cv.clientWidth*dpr!==cv.width)size();
+    const w=cv.width,h=cv.height,s=simState;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle='#13294a';ctx.lineWidth=1*dpr;
+    ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+    const amp=Math.min(h*0.42,(s.sv/12)*h*0.42);
+    const cycles=s.f, tt=(now-t0)/1000;
+    ctx.strokeStyle='#14B8A6';ctx.lineWidth=2*dpr;ctx.shadowColor='#14B8A6';ctx.shadowBlur=6*dpr;
+    ctx.beginPath();
+    for(let x=0;x<=w;x+=2*dpr){
+      const ph=(x/w)*cycles*Math.PI*2 - tt*s.f*0.9;
+      const y=h/2 - Math.sin(ph)*amp;
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();ctx.shadowBlur=0;
+    simRaf=requestAnimationFrame(frame);
+  }
+  simRaf=requestAnimationFrame(frame);
+}
 
 function viewScenarios(){
   const sc=SCEN[lang];const i=state.scnIdx;const S=sc[i];
@@ -972,9 +1232,9 @@ function resetProg(){
 function render(){
   renderChrome();
   const el=document.getElementById("view");
-  const map={home:viewHome,lessons:viewLessons,test:viewTest,scenarios:viewScenarios,cards:viewCards,mistakes:viewMistakes};
+  const map={home:viewHome,lessons:viewLessons,simulator:viewSimulator,test:viewTest,scenarios:viewScenarios,cards:viewCards,mistakes:viewMistakes};
   el.innerHTML=(map[view]||viewHome)();
-  const f=document.createElement("footer");f.className="";
+  if(view==='simulator') simStart(); else simStop();
 }
 render();
 /* footer */
