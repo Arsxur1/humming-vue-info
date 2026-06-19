@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HFO · Humming Vue · Обучение №1</title>
+<style>
+  :root{
+    --bg:#0A1628; --bg2:#0E1E36; --panel:#10233F; --panel2:#152C4D;
+    --line:#1E3A5F; --line2:#27496f;
+    --teal:#14B8A6; --teal-d:#0D9488; --lime:#A8F03C; --amber:#F59E0B;
+    --blue:#3B82F6; --red:#F26D6D; --green:#34D399; --purple:#A78BFA;
+    --txt:#E8EFF7; --mut:#94A3B8; --mut2:#64748B;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+    --sans:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--txt);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;background:
+    radial-gradient(1100px 700px at 80% -10%, rgba(20,184,166,.10), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgba(168,240,60,.07), transparent 55%),
+    var(--bg)}
+  .num,.mono{font-family:var(--mono)}
+  .wrap{max-width:920px;margin:0 auto;padding:0 18px}
+  sub{font-size:.7em}
+
+  /* ---------- Header ---------- */
+  header{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);
+    background:rgba(10,22,40,.82);border-bottom:1px solid var(--line)}
+  .hbar{display:flex;align-items:center;gap:12px;height:58px}
+  .brand{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:800;letter-spacing:.5px}
+  .brand .wave{width:30px;height:18px;flex:0 0 auto}
+  .brand b{color:var(--txt);font-size:15px}
+  .brand .prod{color:var(--lime);font-size:11px;font-family:var(--mono);letter-spacing:1.5px}
+  .grow{flex:1}
+  .langs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:3px}
+  .langs button{background:none;border:none;color:var(--mut);font-family:var(--mono);
+    font-size:11px;font-weight:700;padding:5px 9px;border-radius:999px;cursor:pointer;letter-spacing:.5px}
+  .langs button.on{background:var(--teal);color:#04121f}
+
+  /* ---------- Nav tabs ---------- */
+  nav.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}
+  nav.tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;display:flex;align-items:center;gap:7px;background:var(--panel);
+    border:1px solid var(--line);color:var(--mut);font-weight:700;font-size:13px;
+    padding:8px 13px;border-radius:11px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .tab:hover{border-color:var(--line2);color:var(--txt)}
+  .tab.on{background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border-color:var(--teal);color:var(--txt);box-shadow:0 0 0 1px rgba(20,184,166,.25)}
+  .tab .ic{font-size:15px}
+  .tab .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  main{padding:18px 0 80px;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--teal);font-weight:700}
+  h1.title{font-size:clamp(26px,5.5vw,40px);line-height:1.08;font-weight:800;margin:10px 0 12px;letter-spacing:-.5px}
+  h1 .ac{color:var(--lime)}
+  .sub{color:var(--mut);font-size:15px;max-width:640px}
+  h2.sec{font-size:22px;font-weight:800;margin:4px 0 14px;letter-spacing:-.3px}
+  .accent{color:var(--teal)}
+
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line);border-radius:16px;padding:18px}
+  .grid{display:grid;gap:12px}
+  @media(min-width:620px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}}
+
+  /* ---------- Home ---------- */
+  .hero{text-align:left;padding:8px 0 6px}
+  .wavebig{height:54px;margin:14px 0 18px}
+  .modcard{position:relative;overflow:hidden;cursor:pointer;transition:.18s;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:16px;padding:18px 18px 16px}
+  .modcard:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:0 14px 34px -18px rgba(20,184,166,.6)}
+  .modcard .mic{font-size:26px}
+  .modcard h3{font-size:17px;font-weight:800;margin:9px 0 5px}
+  .modcard p{color:var(--mut);font-size:13.5px}
+  .modcard .meta{margin-top:12px;display:flex;align-items:center;gap:8px;font-family:var(--mono);
+    font-size:11px;color:var(--mut2)}
+  .pill{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;
+    padding:3px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--mut)}
+  .pill.done{background:rgba(52,211,153,.14);border-color:rgba(52,211,153,.5);color:var(--green)}
+  .progress{height:7px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:11px}
+  .progress i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--lime));border-radius:999px;transition:width .5s}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#04121f;
+    border:none;font-family:var(--sans);font-weight:800;font-size:14px;padding:11px 18px;
+    border-radius:11px;cursor:pointer;transition:.15s}
+  .btn:hover{background:#19cdb9;transform:translateY(-1px)}
+  .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line2)}
+  .btn.ghost:hover{border-color:var(--teal);background:rgba(20,184,166,.08)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+  /* ---------- Lessons ---------- */
+  .lessonnav{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+  .lchip{background:var(--panel);border:1px solid var(--line);color:var(--mut);font-family:var(--mono);
+    font-size:12px;font-weight:700;width:34px;height:34px;border-radius:9px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.15s}
+  .lchip:hover{border-color:var(--line2);color:var(--txt)}
+  .lchip.on{background:var(--teal);color:#04121f;border-color:var(--teal)}
+  .lchip.seen{border-color:rgba(52,211,153,.5);color:var(--green)}
+  .lessonbody h3{font-size:20px;font-weight:800;margin:0 0 4px}
+  .lessonbody .lead{color:var(--txt);font-size:15.5px;margin:12px 0}
+  .lessonbody p{color:var(--mut);margin:11px 0;font-size:14.5px}
+  .lessonbody b{color:var(--txt)}
+  .keybox{background:var(--bg2);border:1px solid var(--line);border-left:3px solid var(--lime);
+    border-radius:10px;padding:13px 15px;margin:14px 0}
+  .keybox .kl{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--lime);font-weight:700;text-transform:uppercase}
+  .keybox ul{margin:8px 0 0;padding-left:18px}
+  .keybox li{margin:5px 0;color:var(--txt);font-size:14px}
+  .warn{background:rgba(242,109,109,.09);border:1px solid rgba(242,109,109,.32);
+    border-radius:10px;padding:11px 14px;margin:13px 0;font-size:13.5px;color:#ffd9d9}
+  .warn b{color:#ffb4b4}
+  .formula{font-family:var(--mono);background:var(--bg2);border:1px solid var(--line2);
+    border-radius:9px;padding:10px 14px;display:inline-block;margin:8px 0;color:var(--teal);font-weight:600;font-size:15px}
+
+  /* ---------- Test ---------- */
+  .qcard{margin-bottom:14px}
+  .qhead{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);
+    font-size:11px;color:var(--mut2);margin-bottom:10px;letter-spacing:1px}
+  .qtext{font-size:16.5px;font-weight:700;margin-bottom:14px}
+  .opt{display:flex;align-items:flex-start;gap:11px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:11px;padding:12px 14px;margin:8px 0;cursor:pointer;transition:.12s;font-size:14.5px}
+  .opt:hover{border-color:var(--line2)}
+  .opt .mk{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);
+    font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--mut)}
+  .opt.sel{border-color:var(--teal);background:rgba(20,184,166,.10)}
+  .opt.sel .mk{border-color:var(--teal);background:var(--teal);color:#04121f}
+  .opt.correct{border-color:var(--green);background:rgba(52,211,153,.12)}
+  .opt.correct .mk{border-color:var(--green);background:var(--green);color:#04121f}
+  .opt.wrong{border-color:var(--red);background:rgba(242,109,109,.12)}
+  .opt.wrong .mk{border-color:var(--red);background:var(--red);color:#fff}
+  .opt.lock{cursor:default}
+  .explain{font-size:13px;color:var(--mut);margin-top:10px;padding-left:2px;border-left:2px solid var(--line2);padding-left:11px}
+  .explain b{color:var(--teal)}
+
+  .result{text-align:center;padding:26px 18px}
+  .scorebig{font-family:var(--mono);font-size:58px;font-weight:700;line-height:1}
+  .scorebig.pass{color:var(--green)} .scorebig.fail{color:var(--amber)}
+  .badge{display:inline-block;margin:14px 0 6px;font-family:var(--mono);font-weight:700;
+    font-size:13px;letter-spacing:1px;padding:8px 18px;border-radius:999px}
+  .badge.pass{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.5)}
+  .badge.fail{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.5)}
+
+  /* ---------- Scenarios ---------- */
+  .scn .tagrow{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 4px}
+  .stag{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:999px}
+  .stag.oxy{background:rgba(59,130,246,.15);color:#8fbcff;border:1px solid rgba(59,130,246,.4)}
+  .stag.vent{background:rgba(245,158,11,.15);color:#ffce80;border:1px solid rgba(245,158,11,.4)}
+  .stag.alarm{background:rgba(242,109,109,.15);color:#ffb4b4;border:1px solid rgba(242,109,109,.4)}
+  .scn .vitals{display:flex;gap:14px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--line);
+    border-radius:11px;padding:12px 14px;margin:12px 0;font-family:var(--mono)}
+  .vit{display:flex;flex-direction:column}
+  .vit .vk{font-size:9px;color:var(--mut2);letter-spacing:1px}
+  .vit .vv{font-size:17px;font-weight:600;color:var(--txt)}
+  .vit .vv.bad{color:var(--amber)}
+
+  /* ---------- Flashcards ---------- */
+  .deck{display:grid;gap:12px}
+  @media(min-width:620px){.deck{grid-template-columns:1fr 1fr}}
+  .flip{perspective:1200px;height:150px;cursor:pointer}
+  .flipin{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+  .flip.on .flipin{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:15px;padding:16px;
+    display:flex;flex-direction:column;justify-content:center;border:1px solid var(--line)}
+  .front{background:linear-gradient(180deg,var(--panel2),var(--panel))}
+  .front .ic{font-size:26px;margin-bottom:8px}
+  .front .q{font-weight:800;font-size:16px}
+  .front .hint{margin-top:auto;font-family:var(--mono);font-size:10px;color:var(--mut2);letter-spacing:1px}
+  .back{background:linear-gradient(180deg,#0c2238,#0a1c30);transform:rotateY(180deg);border-color:var(--teal)}
+  .back .a{font-size:14px;color:var(--txt)}
+  .back .a b{color:var(--lime)}
+
+  /* ---------- Mistakes ---------- */
+  .mcard{margin-bottom:12px}
+  .mnum{font-family:var(--mono);font-size:13px;color:var(--teal);font-weight:700}
+  .mpair{display:grid;gap:10px;margin:10px 0}
+  @media(min-width:620px){.mpair{grid-template-columns:1fr 1fr}}
+  .mdo,.mdont{border-radius:11px;padding:12px 14px;font-size:14px}
+  .mdo{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.32)}
+  .mdont{background:rgba(242,109,109,.08);border:1px solid rgba(242,109,109,.32)}
+  .ml{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:5px}
+  .mdo .ml{color:var(--green)} .mdont .ml{color:var(--red)}
+  .mwhy{font-size:13px;color:var(--mut);background:var(--bg2);border-radius:10px;padding:10px 13px}
+  .mwhy b{color:var(--teal);font-family:var(--mono);font-size:10px;letter-spacing:1px;display:block;margin-bottom:4px;text-transform:uppercase}
+
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:18px 0;color:var(--mut2);
+    font-family:var(--mono);font-size:11px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  footer .dot{opacity:.5}
+  .disc{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:10px;
+    padding:10px 13px;margin-top:14px;font-size:11.5px;color:#ffce80;font-family:var(--mono);line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hbar">
+    <div class="brand" onclick="go('home')">
+      <svg class="wave" viewBox="0 0 60 30"><path d="M2 15 Q8 2 14 15 T26 15 T38 15 T50 15 T58 15" fill="none" stroke="#14B8A6" stroke-width="3" stroke-linecap="round"/></svg>
+      <div><b>HUMMING VUE</b> <span class="prod">HFO · ОБУЧЕНИЕ №1</span></div>
+    </div>
+    <div class="grow"></div>
+    <div class="langs" id="langs"></div>
+  </div>
+  <div class="wrap"><nav class="tabs" id="tabs"></nav></div>
+</header>
+
+<main><div class="wrap" id="view"></div></main>
+
+<script>
+/* =========================================================================
+   HFO · Humming Vue · Обучающее приложение №1
+   Автономный однофайловый учебный модуль. Без внешних зависимостей.
+   Контент основан на материалах руководства Humming Vue (HFO) из репозитория.
+   ========================================================================= */
+
+/* ---------- i18n: интерфейс ---------- */
+const UI = {
+  ru:{
+    nav:{home:"Главная",lessons:"Уроки",test:"Тест",scenarios:"Сценарии",cards:"Карточки",mistakes:"Ошибки"},
+    heroEye:"Учебный курс · для врачей и медсестёр ОРИТН",
+    heroTitle:["Высокочастотная вентиляция","за 30 минут."],
+    heroSub:"Полный курс по работе на аппарате Metran Humming Vue в режиме HFO: короткие уроки, тест с оценкой, клинические сценарии, карточки и разбор типичных ошибок. Прогресс сохраняется в этом браузере.",
+    start:"Начать обучение",
+    reset:"Сбросить прогресс",
+    overall:"Общий прогресс",
+    modules:{
+      lessons:{t:"Уроки",d:"Семь коротких уроков: физика метода, показания, четыре настройки, как начать пациента, мониторинг и отучение."},
+      test:{t:"Тест с оценкой",d:"12 вопросов. Порог сдачи — 80%. В конце — баллы и разбор ошибок."},
+      scenarios:{t:"Клинические сценарии",d:"Газы крови и витальные показатели на экране — выбери правильное действие. С обратной связью."},
+      cards:{t:"Карточки",d:"Двенадцать карточек для быстрого запоминания норм, формул и правил. Нажми, чтобы перевернуть."},
+      mistakes:{t:"Разбор ошибок",d:"Шесть вещей, на которых спотыкаются все. «Делай / Не делай» и почему."}
+    },
+    lessonsTitle:"Уроки",
+    lessonsSub:"Семь уроков по порядку. Прочитанные отмечаются зелёным.",
+    next:"Дальше",prev:"Назад",markDone:"Урок изучен →",
+    testTitle:"Проверка знаний",
+    testSub:"12 вопросов с одним правильным ответом. Отвечай — и нажми «Проверить».",
+    check:"Проверить ответы",
+    answeredOf:(a,n)=>`Отвечено ${a} из ${n}`,
+    yourScore:"Ваш результат",
+    correct:n=>`${n} правильных`,
+    passMsg:"Зачёт! Вы готовы к работе на HFO.",
+    failMsg:"Не зачёт. Повторите уроки и попробуйте снова.",
+    retry:"Пройти заново",
+    toLessons:"К урокам",
+    review:"Разбор ответов",
+    scnTitle:"Клинические сценарии",
+    scnSub:"Реальная ситуация у постели. Что будешь крутить?",
+    scnQ:"Что делать?",
+    scnNext:"Следующий сценарий →",
+    scnDone:"Сценарии пройдены",
+    cardsTitle:"Карточки для запоминания",
+    cardsSub:"Нажми на карточку — она перевернётся. Положи рядом с аппаратом.",
+    mistTitle:"Разбор типичных ошибок",
+    mistSub:"Шесть вещей, на которых спотыкаются все.",
+    do:"Делай",dont:"Не делай",why:"Почему",
+    correctLbl:"Верно",wrongLbl:"Неверно",yourAns:"Ваш ответ",
+    disclaimer:"Учебный материал. Не заменяет официальную инструкцию производителя и клинические протоколы вашего учреждения. Все параметры — для обучения; в работе сверяйтесь с протоколом и состоянием пациента.",
+    footer:"Humming Vue · HFO · Учебный модуль №1"
+  },
+  en:{
+    nav:{home:"Home",lessons:"Lessons",test:"Test",scenarios:"Scenarios",cards:"Cards",mistakes:"Mistakes"},
+    heroEye:"Training course · for NICU clinicians",
+    heroTitle:["High-frequency ventilation","in 30 minutes."],
+    heroSub:"A complete course on running the Metran Humming Vue in HFO mode: short lessons, a graded test, clinical scenarios, flashcards and a review of common mistakes. Progress is saved in this browser.",
+    start:"Start the course",
+    reset:"Reset progress",
+    overall:"Overall progress",
+    modules:{
+      lessons:{t:"Lessons",d:"Seven short lessons: the physics, indications, the four settings, how to start a patient, monitoring and weaning."},
+      test:{t:"Graded test",d:"12 questions. Pass mark 80%. Score and an answer review at the end."},
+      scenarios:{t:"Clinical scenarios",d:"Blood gases and vitals on screen — pick the correct action. With feedback."},
+      cards:{t:"Flashcards",d:"Twelve cards for quick recall of targets, formulas and rules. Tap to flip."},
+      mistakes:{t:"Mistake review",d:"Six things everyone trips over. Do / Don't, and why."}
+    },
+    lessonsTitle:"Lessons",
+    lessonsSub:"Seven lessons in order. Read ones turn green.",
+    next:"Next",prev:"Back",markDone:"Mark as read →",
+    testTitle:"Knowledge check",
+    testSub:"12 single-answer questions. Answer, then press Check.",
+    check:"Check answers",
+    answeredOf:(a,n)=>`Answered ${a} of ${n}`,
+    yourScore:"Your score",
+    correct:n=>`${n} correct`,
+    passMsg:"Passed! You're ready to work on HFO.",
+    failMsg:"Not passed. Review the lessons and try again.",
+    retry:"Try again",
+    toLessons:"Go to lessons",
+    review:"Answer review",
+    scnTitle:"Clinical scenarios",
+    scnSub:"A real situation at the bedside. What will you adjust?",
+    scnQ:"What do you do?",
+    scnNext:"Next scenario →",
+    scnDone:"Scenarios complete",
+    cardsTitle:"Flashcards",
+    cardsSub:"Tap a card to flip it. Keep it next to the device.",
+    mistTitle:"Common mistakes",
+    mistSub:"Six things everyone trips over.",
+    do:"Do",dont:"Don't",why:"Why",
+    correctLbl:"Correct",wrongLbl:"Wrong",yourAns:"Your answer",
+    disclaimer:"Educational material. It does not replace the manufacturer's official instructions or your institution's clinical protocols. All values are for learning; in practice follow your protocol and the patient's condition.",
+    footer:"Humming Vue · HFO · Training module #1"
+  },
+  uz:{
+    nav:{home:"Bosh sahifa",lessons:"Darslar",test:"Test",scenarios:"Vaziyatlar",cards:"Kartochkalar",mistakes:"Xatolar"},
+    heroEye:"O‘quv kursi · YaRITB shifokorlari uchun",
+    heroTitle:["Yuqori chastotali ventilyatsiya","30 daqiqada."],
+    heroSub:"Metran Humming Vue apparatida HFO rejimida ishlash bo‘yicha to‘liq kurs: qisqa darslar, baholanadigan test, klinik vaziyatlar, kartochkalar va keng tarqalgan xatolar tahlili. Natija shu brauzerda saqlanadi.",
+    start:"Kursni boshlash",
+    reset:"Natijani tozalash",
+    overall:"Umumiy natija",
+    modules:{
+      lessons:{t:"Darslar",d:"Yetti qisqa dars: usul fizikasi, ko‘rsatmalar, to‘rt sozlama, bemorni qanday boshlash, monitoring va fitimdan chiqarish."},
+      test:{t:"Baholanadigan test",d:"12 ta savol. O‘tish chegarasi — 80%. Oxirida ball va xatolar tahlili."},
+      scenarios:{t:"Klinik vaziyatlar",d:"Qon gazlari va hayotiy ko‘rsatkichlar ekranda — to‘g‘ri harakatni tanlang. Izoh bilan."},
+      cards:{t:"Kartochkalar",d:"Me'yor, formula va qoidalarni tez yodlash uchun o‘n ikkita kartochka. Aylantirish uchun bosing."},
+      mistakes:{t:"Xatolar tahlili",d:"Hamma qoqiladigan oltita narsa. «Qil / Qilma» va nega."}
+    },
+    lessonsTitle:"Darslar",
+    lessonsSub:"Yetti dars tartib bilan. O‘qilganlari yashil bo‘ladi.",
+    next:"Keyingi",prev:"Orqaga",markDone:"Dars o‘qildi →",
+    testTitle:"Bilimni tekshirish",
+    testSub:"Bitta to‘g‘ri javobli 12 savol. Javob bering va «Tekshirish»ni bosing.",
+    check:"Javoblarni tekshirish",
+    answeredOf:(a,n)=>`${n} dan ${a} ta javob berildi`,
+    yourScore:"Sizning natijangiz",
+    correct:n=>`${n} ta to‘g‘ri`,
+    passMsg:"O‘tdingiz! Siz HFO da ishlashga tayyorsiz.",
+    failMsg:"O‘ta olmadingiz. Darslarni takrorlang va qayta urinib ko‘ring.",
+    retry:"Qayta urinish",
+    toLessons:"Darslarga",
+    review:"Javoblar tahlili",
+    scnTitle:"Klinik vaziyatlar",
+    scnSub:"Bemor yonidagi haqiqiy vaziyat. Nimani o‘zgartirasiz?",
+    scnQ:"Nima qilasiz?",
+    scnNext:"Keyingi vaziyat →",
+    scnDone:"Vaziyatlar yakunlandi",
+    cardsTitle:"Yodlash kartochkalari",
+    cardsSub:"Kartochkani bosing — u aylanadi. Apparat yoniga qo‘ying.",
+    mistTitle:"Keng tarqalgan xatolar",
+    mistSub:"Hamma qoqiladigan oltita narsa.",
+    do:"Qil",dont:"Qilma",why:"Nega",
+    correctLbl:"To‘g‘ri",wrongLbl:"Noto‘g‘ri",yourAns:"Sizning javobingiz",
+    disclaimer:"O‘quv materiali. Ishlab chiqaruvchining rasmiy yo‘riqnomasi va muassasangiz klinik protokollarini almashtirmaydi. Barcha qiymatlar o‘qish uchun; amalda protokol va bemor holatiga rioya qiling.",
+    footer:"Humming Vue · HFO · O‘quv moduli №1"
+  }
+};
+
+/* ---------- Контент: уроки ---------- */
+const LESSONS = {
+  ru:[
+    {t:"Что такое HFO — «колибри»",lead:"HFO — это не «обычная ИВЛ, только быстрее». Это другой способ заставить лёгкие работать.",
+     body:["Когда колибри зависает в воздухе, она машет крыльями <b>50–80 раз в секунду</b>. Крылья почти не двигаются — они дрожат. Этого достаточно, чтобы держаться в воздухе.",
+     "Так и HFO: вместо больших вдохов — крошечные колебания, <b>до 15 раз в секунду</b>. Альвеолы — это микро-шарики. На обычной ИВЛ мы их каждый раз надуваем и сдуваем. На HFO мы <b>держим их надутыми постоянно</b> и слегка трясём.",
+     "Газы (O₂ и CO₂) перемешиваются за счёт вибрации, а не за счёт «приехал-уехал». Лёгкое на HFO не дышит — оно <b>гудит</b>. Отсюда название — Humming."],
+     key:["Маленькие движения, очень частые — до 15 Гц","Лёгкие держим открытыми постоянно на MAP","Газообмен — за счёт перемешивания, не объёмного потока"]},
+    {t:"HFO против обычной ИВЛ",lead:"Главное отличие — в том, что происходит с альвеолой.",
+     body:["<b>Обычная ИВЛ (CMV):</b> большие вдохи и выдохи. Альвеола раскрывается и спадается с каждым циклом. Каждое большое растяжение незрелого лёгкого — это травма (волюмо- и баротравма).",
+     "<b>HFO:</b> постоянное среднее давление (MAP) держит лёгкое раскрытым, а сверху накладываются крошечные колебания. Амплитуды малы, пиковых растяжений нет.",
+     "Поэтому HFO особенно ценен у новорождённых: лёгкие как тонкая плёнка, и щадящая стратегия защищает их."],
+     key:["CMV: надуть–сдуть, большие объёмы, риск травмы","HFO: держать открытым + микроколебания","Меньше пиковое давление → меньше повреждение лёгких"]},
+    {t:"Показания — когда выбирать HFO",lead:"HFO — это другой инструмент для конкретных задач, а не просто «следующий шаг».",
+     body:["<b>RDS</b> — респираторный дистресс недоношенных: незрелые лёгкие, мало сурфактанта; HFO даёт альвеолам «отдых».",
+     "<b>MAS</b> — аспирация мекония у доношенных: колебания «прокачивают» газы мимо пробок.",
+     "<b>PPHN</b> — лёгочная гипертензия, часто с iNO: стабильный MAP раскрывает капиллярное русло.",
+     "<b>Air leak</b> — пневмоторакс / интерстициальная эмфизема: малые колебания не «надувают» дырку.",
+     "<b>CDH</b> — диафрагмальная грыжа: низкие объёмы берегут гипоплазированные лёгкие.",
+     "<b>Rescue</b> — после неудачи CMV (FiO₂ > 60% и MAP > 12)."],
+     key:["RDS, MAS, PPHN, Air leak, CDH, Rescue","Это 95% реальных случаев в ОРИТН","Переход с CMV — до повреждения, не после"]},
+    {t:"Четыре настройки и четыре авто-показателя",lead:"На Humming Vue ты управляешь четырьмя параметрами справа и читаешь четыре показателя слева.",
+     body:["<b>Настраиваешь (справа):</b> SV — Stroke Volume (ударный объём поршня, шаг 0.2 мл), MAP — среднее давление, f — частота, FiO₂ — кислород.",
+     "<b>Читаешь (слева, автоматически):</b> ΔA — амплитуда, MAP измеренный, V_hfo — дыхательный объём осцилляции, DCO₂ — показатель выведения CO₂.",
+     "Ключевая особенность аппарата: ты крутишь <b>SV, а не амплитуду</b>. Амплитуда ΔP/ΔA — это следствие SV. Поршень с точностью 13 мкм доставляет объём по объёмному принципу — точно, вне зависимости от комплайнса."],
+     key:["Настройки: SV · MAP · f · FiO₂","Авто-показатели: ΔA · MAP · V_hfo · DCO₂","Крутим SV (шаг 0.2 мл), амплитуда — следствие"],
+     formula:"DCO₂ = V_hfo² × f"},
+    {t:"Как начать пациента: 4 шага",lead:"Четыре шага строго по порядку. Не пропускай.",
+     body:["<b>1. Оптимизация MAP.</b> Установи MAP на 1–2 см H₂O выше, чем было на CMV. Повышай по 1 см каждые 2–3 мин до улучшения SpO₂, затем снижай по 1 см до момента падения SpO₂ — это «точка раскрытия». Установи MAP на 2 см выше неё.",
+     "<b>2. Частота (f).</b> Новорождённые 10–15 Гц; до 1 года 8–10; старше 6–8; взрослые 3–5. Чем меньше пациент — тем выше частота. Частоту меняем редко.",
+     "<b>3. Stroke Volume (SV).</b> Старт — 2 мл/кг (или 1.2–1.4 мл/кг при гипокапнии/спонтанном дыхании), шаг 0.2 мл. Цель — видимая вибрация грудной клетки до пупка. Через 20–30 мин — газы.",
+     "<b>4. FiO₂ и проверка.</b> Старт 90–100%, снижай по 5%. Цель: SpO₂ 90–95% при FiO₂ < 60%. Через 30 мин — рентген (8–9 рёбер) и газы."],
+     key:["Порядок: MAP → f → SV → FiO₂","MAP — «точка раскрытия» + 2 см","SV старт 2 мл/кг, FiO₂ снижаем первым"],
+     warn:"Слишком высокий MAP → перерастяжение → нарушение перфузии → десатурация. Слишком низкий → ателектаз."},
+    {t:"Мониторинг: на что смотреть",lead:"Не доверяй только цифрам и не доверяй только глазу — смотри вместе.",
+     body:["<b>Глаз:</b> видимая вибрация грудной клетки до уровня пупка — признак адекватного V_hfo.",
+     "<b>Экран:</b> рост DCO₂ и адекватный V_hfo — лучшие индикаторы выведения CO₂. <b>DCO₂ = V_hfo² × f</b> — обрати внимание: объём в квадрате, поэтому он влияет сильнее частоты.",
+     "<b>Газы крови:</b> бери через 20–30 минут. Раньше — система не успела уравновеситься; позже — пропустишь декомпенсацию.",
+     "<b>Тревога:</b> если ΔA растёт, а V_hfo и DCO₂ резко падают до нуля — это критическая ситуация: трубка (ЭТТ) забита или отсоединение. Санация немедленно."],
+     key:["Грудная клетка вибрирует до пупка","DCO₂ = V_hfo² × f — объём важнее частоты","Газы через 20–30 мин, не раньше"],
+     formula:"DCO₂ = V_hfo² × f",
+     warn:"ΔA ↑ + V_hfo/DCO₂ → 0 = ЭТТ забита → санация немедленно."},
+    {t:"Коррекция и отучение",lead:"Сначала определи: проблема в оксигенации (O₂) или в вентиляции (CO₂)?",
+     body:["<b>Оксигенация (SpO₂):</b> крути MAP и FiO₂. MAP важнее — ищи «точку раскрытия». При низком SpO₂: ↑ MAP на 1–2 см, затем ↑ FiO₂.",
+     "<b>Вентиляция (CO₂):</b> крути в первую очередь SV. Гиперкапния (CO₂ высокий): ↑ SV на 0.5–1 мл; если SV на максимуме — ↓ f на 1 Гц (ниже частота → больше объём → выше DCO₂). Гипокапния: ↓ SV (цель V_hfo 1.2–1.4 мл/кг).",
+     "<b>Отучение:</b> сначала снижай FiO₂ по 5%, и только потом MAP по 1 см. Никогда не наоборот — резкое падение MAP вызывает коллапс альвеол, и всё придётся начинать заново.",
+     "<b>Золотое правило:</b> меняй что-то одно за раз, иначе не поймёшь, что помогло."],
+     key:["O₂ → MAP и FiO₂ · CO₂ → SV (и f)","Снижение f повышает DCO₂ (объём растёт)","Отучаем: FiO₂ первым, MAP потом, по чуть-чуть"],
+     warn:"Меняй один параметр за раз. Газы — через 20–30 мин после изменения."}
+  ],
+  en:[
+    {t:"What HFO is — the \"hummingbird\"",lead:"HFO is not \"regular ventilation, only faster\". It is a different way to make lungs work.",
+     body:["A hovering hummingbird beats its wings <b>50–80 times per second</b>. The wings barely move — they vibrate. That is enough to stay airborne.",
+     "HFO is the same: instead of big breaths, tiny oscillations <b>up to 15 times per second</b>. Alveoli are micro-balloons. On conventional ventilation we inflate and deflate them each cycle. On HFO we <b>keep them inflated</b> and gently shake them.",
+     "Gases (O₂ and CO₂) mix through vibration, not bulk flow. A lung on HFO doesn't breathe — it <b>hums</b>. Hence the name, Humming."],
+     key:["Small movements, very frequent — up to 15 Hz","Lungs kept open continuously at MAP","Gas exchange by mixing, not bulk tidal flow"]},
+    {t:"HFO versus conventional ventilation",lead:"The key difference is what happens to the alveolus.",
+     body:["<b>Conventional (CMV):</b> big breaths in and out. The alveolus opens and collapses each cycle. Every large stretch of an immature lung is trauma (volu- and barotrauma).",
+     "<b>HFO:</b> a constant mean pressure (MAP) holds the lung open, with tiny oscillations on top. Amplitudes are small, no peak stretching.",
+     "That is why HFO is so valuable in neonates: the lungs are like thin film, and a gentle strategy protects them."],
+     key:["CMV: inflate–deflate, large volumes, trauma risk","HFO: hold open + micro-oscillations","Lower peak pressure → less lung injury"]},
+    {t:"Indications — when to choose HFO",lead:"HFO is a different tool for specific tasks, not just the \"next step\".",
+     body:["<b>RDS</b> — preterm respiratory distress: immature lungs, little surfactant; HFO rests the alveoli.",
+     "<b>MAS</b> — meconium aspiration in term babies: oscillations push gas past the plugs.",
+     "<b>PPHN</b> — pulmonary hypertension, often with iNO: a stable MAP opens the capillary bed.",
+     "<b>Air leak</b> — pneumothorax / interstitial emphysema: small oscillations don't inflate the leak.",
+     "<b>CDH</b> — diaphragmatic hernia: low volumes spare hypoplastic lungs.",
+     "<b>Rescue</b> — after CMV failure (FiO₂ > 60% and MAP > 12)."],
+     key:["RDS, MAS, PPHN, Air leak, CDH, Rescue","Covers 95% of real NICU cases","Switch from CMV before injury, not after"]},
+    {t:"Four settings and four auto-readouts",lead:"On the Humming Vue you control four parameters on the right and read four readouts on the left.",
+     body:["<b>You set (right):</b> SV — Stroke Volume (piston stroke, 0.2 mL step), MAP — mean pressure, f — frequency, FiO₂ — oxygen.",
+     "<b>You read (left, automatic):</b> ΔA — amplitude, measured MAP, V_hfo — oscillatory tidal volume, DCO₂ — CO₂ clearance index.",
+     "The device's key trait: you turn <b>SV, not amplitude</b>. Amplitude ΔP/ΔA is a consequence of SV. A 13-µm precision piston delivers volume by a volumetric principle — accurately, regardless of compliance."],
+     key:["Settings: SV · MAP · f · FiO₂","Readouts: ΔA · MAP · V_hfo · DCO₂","Turn SV (0.2 mL step); amplitude follows"],
+     formula:"DCO₂ = V_hfo² × f"},
+    {t:"Starting a patient: 4 steps",lead:"Four steps, strictly in order. Don't skip.",
+     body:["<b>1. Optimise MAP.</b> Set MAP 1–2 cmH₂O above the CMV value. Raise by 1 cm every 2–3 min until SpO₂ improves, then lower by 1 cm until SpO₂ starts to drop — the \"opening point\". Set MAP 2 cm above it.",
+     "<b>2. Frequency (f).</b> Neonates 10–15 Hz; under 1 yr 8–10; older 6–8; adults 3–5. The smaller the patient, the higher the frequency. Frequency is changed rarely.",
+     "<b>3. Stroke Volume (SV).</b> Start at 2 mL/kg (or 1.2–1.4 mL/kg with hypocapnia/spontaneous breathing), step 0.2 mL. Aim for visible chest wobble down to the navel. Gases at 20–30 min.",
+     "<b>4. FiO₂ and check.</b> Start 90–100%, wean by 5%. Target: SpO₂ 90–95% at FiO₂ < 60%. At 30 min — X-ray (8–9 ribs) and gases."],
+     key:["Order: MAP → f → SV → FiO₂","MAP = opening point + 2 cm","SV starts 2 mL/kg; wean FiO₂ first"],
+     warn:"Too high a MAP → overdistension → impaired perfusion → desaturation. Too low → atelectasis."},
+    {t:"Monitoring: what to watch",lead:"Don't trust the numbers alone or the eye alone — read them together.",
+     body:["<b>Eye:</b> visible chest vibration down to the navel signals adequate V_hfo.",
+     "<b>Screen:</b> rising DCO₂ with adequate V_hfo are the best CO₂-clearance indicators. <b>DCO₂ = V_hfo² × f</b> — note the volume is squared, so it matters more than frequency.",
+     "<b>Blood gases:</b> draw at 20–30 minutes. Earlier — not equilibrated; later — you miss decompensation.",
+     "<b>Alarm:</b> if ΔA rises while V_hfo and DCO₂ fall sharply to zero — critical: blocked ETT or disconnection. Suction immediately."],
+     key:["Chest vibrates down to the navel","DCO₂ = V_hfo² × f — volume beats frequency","Gases at 20–30 min, not sooner"],
+     formula:"DCO₂ = V_hfo² × f",
+     warn:"ΔA ↑ + V_hfo/DCO₂ → 0 = blocked ETT → suction immediately."},
+    {t:"Correction and weaning",lead:"First decide: is the problem oxygenation (O₂) or ventilation (CO₂)?",
+     body:["<b>Oxygenation (SpO₂):</b> adjust MAP and FiO₂. MAP comes first — find the opening point. Low SpO₂: ↑ MAP by 1–2 cm, then ↑ FiO₂.",
+     "<b>Ventilation (CO₂):</b> adjust SV first. Hypercapnia (high CO₂): ↑ SV by 0.5–1 mL; if SV is maxed — ↓ f by 1 Hz (lower frequency → larger volume → higher DCO₂). Hypocapnia: ↓ SV (target V_hfo 1.2–1.4 mL/kg).",
+     "<b>Weaning:</b> lower FiO₂ by 5% first, only then MAP by 1 cm. Never the other way — a sudden MAP drop collapses alveoli and you start over.",
+     "<b>Golden rule:</b> change one thing at a time, or you won't know what helped."],
+     key:["O₂ → MAP & FiO₂ · CO₂ → SV (and f)","Lowering f raises DCO₂ (volume grows)","Wean FiO₂ first, MAP later, in small steps"],
+     warn:"Change one parameter at a time. Gases 20–30 min after a change."}
+  ],
+  uz:[
+    {t:"HFO nima — «kolibri»",lead:"HFO — bu «oddiy ventilyatsiya, faqat tezroq» emas. Bu o‘pkani ishlatishning boshqa usuli.",
+     body:["Havoda muallaq turgan kolibri qanotlarini <b>sekundiga 50–80 marta</b> qoqadi. Qanotlar deyarli qimirlamaydi — ular titraydi. Bu havoda turish uchun yetarli.",
+     "HFO ham shunday: katta nafaslar o‘rniga <b>sekundiga 15 martagacha</b> kichik tebranishlar. Alveolalar — mikro-sharchalar. Oddiy ventilyatsiyada biz ularni har siklda shishiramiz va bo‘shatamiz. HFO da esa <b>doimo shishirilgan holda ushlab</b>, ohista silkitamiz.",
+     "Gazlar (O₂ va CO₂) tebranish hisobiga aralashadi, oqim hisobiga emas. HFO dagi o‘pka nafas olmaydi — u <b>g‘uvillaydi</b>. Nomi ham shundan — Humming."],
+     key:["Kichik harakatlar, juda tez-tez — 15 Gs gacha","O‘pka doimo MAP da ochiq turadi","Gaz almashinuvi aralashish orqali, oqim emas"]},
+    {t:"HFO va oddiy ventilyatsiya",lead:"Asosiy farq — alveolaga nima bo‘lishida.",
+     body:["<b>Oddiy (CMV):</b> katta nafas kirib-chiqadi. Alveola har siklda ochilib-yopiladi. Yetilmagan o‘pkaning har bir katta cho‘zilishi — jarohat (volyu- va barotravma).",
+     "<b>HFO:</b> doimiy o‘rtacha bosim (MAP) o‘pkani ochiq ushlaydi, ustiga kichik tebranishlar qo‘shiladi. Amplitudalar kichik, cho‘qqi cho‘zilish yo‘q.",
+     "Shuning uchun HFO chaqaloqlarda juda qadrli: o‘pka nozik parda kabi, ehtiyotkor strategiya uni asraydi."],
+     key:["CMV: shishir-bo‘shat, katta hajm, jarohat xavfi","HFO: ochiq ushlab + mikro-tebranishlar","Past cho‘qqi bosim → kamroq o‘pka shikasti"]},
+    {t:"Ko‘rsatmalar — qachon HFO tanlanadi",lead:"HFO — aniq vazifalar uchun boshqa asbob, shunchaki «keyingi qadam» emas.",
+     body:["<b>RDS</b> — chala tug‘ilganlar distressi: yetilmagan o‘pka, surfaktant kam; HFO alveolalarga «dam» beradi.",
+     "<b>MAS</b> — mekoniy aspiratsiyasi (muddatida tug‘ilganlar): tebranishlar gazni tiqinlar yonidan o‘tkazadi.",
+     "<b>PPHN</b> — o‘pka gipertenziyasi, ko‘pincha iNO bilan: barqaror MAP kapillyar to‘shakni ochadi.",
+     "<b>Air leak</b> — pnevmotoraks / interstitsial emfizema: kichik tebranishlar teshikni shishirmaydi.",
+     "<b>CDH</b> — diafragmal churra: past hajm gipoplastik o‘pkani asraydi.",
+     "<b>Rescue</b> — CMV muvaffaqiyatsizligidan keyin (FiO₂ > 60% va MAP > 12)."],
+     key:["RDS, MAS, PPHN, Air leak, CDH, Rescue","Bu real holatlarning 95%","CMV dan o‘tish — shikastdan oldin, keyin emas"]},
+    {t:"To‘rt sozlama va to‘rt avto-ko‘rsatkich",lead:"Humming Vue da o‘ngdagi to‘rt parametrni boshqarasiz va chapdagi to‘rt ko‘rsatkichni o‘qiysiz.",
+     body:["<b>Sozlaysiz (o‘ngda):</b> SV — Stroke Volume (porshen hajmi, 0.2 ml qadam), MAP — o‘rtacha bosim, f — chastota, FiO₂ — kislorod.",
+     "<b>O‘qiysiz (chapda, avtomatik):</b> ΔA — amplituda, o‘lchangan MAP, V_hfo — ostsillyatsiya hajmi, DCO₂ — CO₂ chiqarish ko‘rsatkichi.",
+     "Apparatning asosiy xususiyati: siz <b>amplitudani emas, SV ni</b> burasiz. Amplituda ΔP/ΔA — SV natijasi. 13 mkm aniqlikdagi porshen hajmni hajm prinsipi bo‘yicha — komplayensdan qat'i nazar aniq yetkazadi."],
+     key:["Sozlamalar: SV · MAP · f · FiO₂","Ko‘rsatkichlar: ΔA · MAP · V_hfo · DCO₂","SV ni burang (0.2 ml), amplituda — natija"],
+     formula:"DCO₂ = V_hfo² × f"},
+    {t:"Bemorni boshlash: 4 qadam",lead:"To‘rt qadam qat'iy tartibda. O‘tkazib yubormang.",
+     body:["<b>1. MAP optimallashtirish.</b> MAP ni CMV qiymatidan 1–2 sm H₂O yuqori qo‘ying. SpO₂ yaxshilanguncha har 2–3 daqiqada 1 sm oshiring, so‘ng SpO₂ tusha boshlaguncha 1 sm dan pasaytiring — bu «ochilish nuqtasi». MAP ni undan 2 sm yuqori qo‘ying.",
+     "<b>2. Chastota (f).</b> Chaqaloqlar 10–15 Gs; 1 yoshgacha 8–10; kattaroq 6–8; kattalar 3–5. Bemor qancha kichik bo‘lsa, chastota shuncha yuqori. Chastota kamdan-kam o‘zgartiriladi.",
+     "<b>3. Stroke Volume (SV).</b> Boshlanish — 2 ml/kg (yoki gipokapniya/mustaqil nafasda 1.2–1.4 ml/kg), qadam 0.2 ml. Maqsad — kindikgacha ko‘rinadigan ko‘krak titrashi. 20–30 daqiqada gazlar.",
+     "<b>4. FiO₂ va tekshiruv.</b> Boshlanish 90–100%, 5% dan pasaytiring. Maqsad: FiO₂ < 60% da SpO₂ 90–95%. 30 daqiqada — rentgen (8–9 qovurg‘a) va gazlar."],
+     key:["Tartib: MAP → f → SV → FiO₂","MAP = ochilish nuqtasi + 2 sm","SV boshlanishi 2 ml/kg; avval FiO₂ pasaytiriladi"],
+     warn:"MAP juda yuqori → ortiqcha cho‘zilish → perfuziya buzilishi → desaturatsiya. Juda past → atelektaz."},
+    {t:"Monitoring: nimaga qarash kerak",lead:"Faqat raqamlarga yoki faqat ko‘zga ishonmang — birgalikda o‘qing.",
+     body:["<b>Ko‘z:</b> kindikgacha ko‘rinadigan ko‘krak tebranishi — yetarli V_hfo belgisi.",
+     "<b>Ekran:</b> DCO₂ ortishi va yetarli V_hfo — CO₂ chiqarishning eng yaxshi ko‘rsatkichlari. <b>DCO₂ = V_hfo² × f</b> — hajm kvadratda, shuning uchun u chastotadan kuchliroq ta'sir qiladi.",
+     "<b>Qon gazlari:</b> 20–30 daqiqada oling. Ertaroq — muvozanatga kelmagan; kechroq — dekompensatsiyani o‘tkazib yuborasiz.",
+     "<b>Signal:</b> agar ΔA ortib, V_hfo va DCO₂ keskin nolga tushsa — kritik: ETT tiqilgan yoki uzilgan. Darhol sanatsiya."],
+     key:["Ko‘krak kindikgacha tebranadi","DCO₂ = V_hfo² × f — hajm chastotadan muhim","Gazlar 20–30 daqiqada, ertaroq emas"],
+     formula:"DCO₂ = V_hfo² × f",
+     warn:"ΔA ↑ + V_hfo/DCO₂ → 0 = ETT tiqilgan → darhol sanatsiya."},
+    {t:"Tuzatish va fitimdan chiqarish",lead:"Avval aniqlang: muammo oksigenatsiyada (O₂) yoki ventilyatsiyada (CO₂)?",
+     body:["<b>Oksigenatsiya (SpO₂):</b> MAP va FiO₂ ni sozlang. Avval MAP — ochilish nuqtasini toping. Past SpO₂ da: ↑ MAP 1–2 sm, so‘ng ↑ FiO₂.",
+     "<b>Ventilyatsiya (CO₂):</b> avval SV ni sozlang. Giperkapniya (CO₂ yuqori): ↑ SV 0.5–1 ml; SV maksimal bo‘lsa — ↓ f 1 Gs (past chastota → katta hajm → yuqori DCO₂). Gipokapniya: ↓ SV (maqsad V_hfo 1.2–1.4 ml/kg).",
+     "<b>Fitimdan chiqarish:</b> avval FiO₂ ni 5% dan, faqat keyin MAP ni 1 sm dan pasaytiring. Hech qachon teskari emas — MAP keskin tushishi alveolalarni yopadi va hammasini qaytadan boshlaysiz.",
+     "<b>Oltin qoida:</b> bir vaqtda bitta narsani o‘zgartiring, aks holda nima yordam berganini bilmaysiz."],
+     key:["O₂ → MAP va FiO₂ · CO₂ → SV (va f)","f ni pasaytirish DCO₂ ni oshiradi (hajm ortadi)","Avval FiO₂, keyin MAP, kichik qadamlar bilan"],
+     warn:"Bir vaqtda bitta parametrni o‘zgartiring. O‘zgarishdan 20–30 daqiqa keyin gazlar."}
+  ]
+};
+
+/* ---------- Контент: тест ---------- */
+const QUIZ = {
+  ru:[
+    {q:"Чем HFO принципиально отличается от обычной ИВЛ?",o:["Это та же ИВЛ, только с большей частотой вдохов","Лёгкие держатся открытыми на MAP, а газообмен идёт за счёт малых колебаний","Аппарат сам дышит за пациента глубокими вдохами","Используется только высокий дыхательный объём"],a:1,e:"На HFO лёгкое держат раскрытым на среднем давлении и накладывают крошечные колебания — газы перемешиваются, а не «приезжают-уезжают»."},
+    {q:"Какой параметр ты непосредственно крутишь на Humming Vue для вентиляции?",o:["Амплитуду ΔP напрямую","Stroke Volume (SV), шаг 0.2 мл","DCO₂","V_hfo"],a:1,e:"Ты задаёшь SV (ударный объём поршня). Амплитуда ΔA/ΔP — это следствие SV, а не настройка."},
+    {q:"Формула показателя выведения CO₂:",o:["DCO₂ = V_hfo × f","DCO₂ = V_hfo² × f","DCO₂ = MAP × f","DCO₂ = SV / f"],a:1,e:"DCO₂ = V_hfo² × f. Объём в квадрате — поэтому он влияет сильнее частоты."},
+    {q:"С чего начинают настройку пациента на HFO?",o:["С установки FiO₂ 21%","С оптимизации MAP (поиск «точки раскрытия»)","С максимального SV","Со снижения частоты до 3 Гц"],a:1,e:"Порядок: MAP → f → SV → FiO₂. Сначала раскрывают лёгкие, подбирая MAP."},
+    {q:"Какую частоту выбирают новорождённому?",o:["3–5 Гц","6–8 Гц","10–15 Гц","17–20 Гц"],a:2,e:"Новорождённые: 10–15 Гц. Чем меньше пациент — тем выше частота."},
+    {q:"pCO₂ высокий (гиперкапния). Что делать в первую очередь?",o:["↓ SV","↑ SV на 0.5–1 мл","↑ FiO₂","↑ частоту f"],a:1,e:"CO₂ регулируется через SV. При гиперкапнии повышают SV; если SV на максимуме — снижают f."},
+    {q:"SV уже на максимуме, а CO₂ всё ещё высокий. Следующий шаг?",o:["Повысить частоту f","Снизить частоту f на 1 Гц","Снизить MAP","Поднять FiO₂"],a:1,e:"Снижение частоты увеличивает объём каждого колебания (V_hfo), а значит и DCO₂ — выведение CO₂ растёт."},
+    {q:"Низкий SpO₂. Что корректируют в первую очередь?",o:["SV","Частоту f","MAP (затем FiO₂)","DCO₂"],a:2,e:"Оксигенация управляется через MAP и FiO₂. MAP важнее — ищем «точку раскрытия», затем при необходимости поднимаем FiO₂."},
+    {q:"Признак адекватной осцилляции при осмотре пациента:",o:["Полная неподвижность грудной клетки","Видимая вибрация грудной клетки до уровня пупка","Глубокие редкие подъёмы груди","Западение грудины на вдохе"],a:1,e:"Видимая вибрация до пупка вместе с ростом DCO₂ — лучшие индикаторы адекватной работы."},
+    {q:"ΔA резко выросла, а V_hfo и DCO₂ упали почти до нуля. Это:",o:["Норма при стабильном пациенте","Признак переседации","Обструкция/закупорка ЭТТ — санация немедленно","Сигнал к снижению MAP"],a:2,e:"Рост амплитуды при падении V_hfo и DCO₂ — критическая тревога: трубка забита или отсоединение. Нужна немедленная санация/проверка ЭТТ."},
+    {q:"Через какое время после изменения параметров берут газы крови?",o:["Через 5 минут","Через 20–30 минут","Через 2 часа","Сразу же"],a:1,e:"Раньше система не уравновесилась, позже — можно пропустить декомпенсацию."},
+    {q:"Правильный порядок отучения с HFO:",o:["Сначала резко снизить MAP, потом FiO₂","Сначала FiO₂ по 5%, затем MAP по 1 см","Одновременно снижать MAP, SV и f","Сначала отключить увлажнитель"],a:1,e:"Сначала снижают FiO₂ по 5%, и только потом MAP по 1 см. Резкое падение MAP вызывает коллапс альвеол."}
+  ],
+  en:[
+    {q:"How is HFO fundamentally different from conventional ventilation?",o:["It's the same ventilation, just at a higher breath rate","Lungs are held open at MAP and gas exchange occurs via small oscillations","The device breathes deep breaths for the patient","Only a high tidal volume is used"],a:1,e:"On HFO the lung is held open at a mean pressure with tiny oscillations on top — gases mix rather than flowing in and out."},
+    {q:"Which parameter do you directly set on the Humming Vue for ventilation?",o:["Amplitude ΔP directly","Stroke Volume (SV), 0.2 mL step","DCO₂","V_hfo"],a:1,e:"You set SV (piston stroke volume). Amplitude ΔA/ΔP is a consequence of SV, not a setting."},
+    {q:"The CO₂-clearance index formula is:",o:["DCO₂ = V_hfo × f","DCO₂ = V_hfo² × f","DCO₂ = MAP × f","DCO₂ = SV / f"],a:1,e:"DCO₂ = V_hfo² × f. The volume is squared, so it matters more than frequency."},
+    {q:"What do you start with when setting up a patient on HFO?",o:["Setting FiO₂ to 21%","Optimising MAP (finding the opening point)","Maximum SV","Lowering frequency to 3 Hz"],a:1,e:"Order: MAP → f → SV → FiO₂. First open the lungs by titrating MAP."},
+    {q:"Which frequency do you choose for a neonate?",o:["3–5 Hz","6–8 Hz","10–15 Hz","17–20 Hz"],a:2,e:"Neonates: 10–15 Hz. The smaller the patient, the higher the frequency."},
+    {q:"pCO₂ is high (hypercapnia). What do you do first?",o:["↓ SV","↑ SV by 0.5–1 mL","↑ FiO₂","↑ frequency f"],a:1,e:"CO₂ is controlled via SV. For hypercapnia raise SV; if SV is maxed, lower f."},
+    {q:"SV is already maxed and CO₂ is still high. Next step?",o:["Raise frequency f","Lower frequency f by 1 Hz","Lower MAP","Raise FiO₂"],a:1,e:"Lowering frequency increases the volume of each oscillation (V_hfo), raising DCO₂ and CO₂ clearance."},
+    {q:"Low SpO₂. What do you adjust first?",o:["SV","Frequency f","MAP (then FiO₂)","DCO₂"],a:2,e:"Oxygenation is driven by MAP and FiO₂. MAP first — find the opening point, then raise FiO₂ if needed."},
+    {q:"A sign of adequate oscillation on examining the patient:",o:["A completely still chest","Visible chest vibration down to the navel","Deep, infrequent chest rises","Sternal retraction on inspiration"],a:1,e:"Visible vibration to the navel together with rising DCO₂ are the best indicators of adequate function."},
+    {q:"ΔA jumps up while V_hfo and DCO₂ drop near zero. This is:",o:["Normal in a stable patient","A sign of over-sedation","ETT obstruction — suction immediately","A cue to lower MAP"],a:2,e:"Rising amplitude with falling V_hfo and DCO₂ is a critical alarm: blocked tube or disconnection. Suction/check the ETT at once."},
+    {q:"How long after a parameter change do you draw blood gases?",o:["After 5 minutes","After 20–30 minutes","After 2 hours","Immediately"],a:1,e:"Earlier and the system hasn't equilibrated; later and you may miss decompensation."},
+    {q:"Correct order of weaning from HFO:",o:["Drop MAP sharply first, then FiO₂","FiO₂ by 5% first, then MAP by 1 cm","Lower MAP, SV and f together","Turn off the humidifier first"],a:1,e:"Lower FiO₂ by 5% first, only then MAP by 1 cm. A sudden MAP drop collapses alveoli."}
+  ],
+  uz:[
+    {q:"HFO oddiy ventilyatsiyadan tubdan nimasi bilan farq qiladi?",o:["Bu o‘sha ventilyatsiya, faqat nafas chastotasi yuqori","O‘pka MAP da ochiq ushlanadi, gaz almashinuvi kichik tebranishlar orqali boradi","Apparat bemor o‘rniga chuqur nafas oladi","Faqat yuqori nafas hajmi ishlatiladi"],a:1,e:"HFO da o‘pka o‘rtacha bosimda ochiq ushlanadi, ustiga kichik tebranishlar qo‘shiladi — gazlar aralashadi, kirib-chiqmaydi."},
+    {q:"Ventilyatsiya uchun Humming Vue da qaysi parametrni bevosita sozlaysiz?",o:["ΔP amplitudasini bevosita","Stroke Volume (SV), 0.2 ml qadam","DCO₂","V_hfo"],a:1,e:"Siz SV (porshen hajmi) ni belgilaysiz. Amplituda ΔA/ΔP — SV natijasi, sozlama emas."},
+    {q:"CO₂ chiqarish ko‘rsatkichi formulasi:",o:["DCO₂ = V_hfo × f","DCO₂ = V_hfo² × f","DCO₂ = MAP × f","DCO₂ = SV / f"],a:1,e:"DCO₂ = V_hfo² × f. Hajm kvadratda — shuning uchun u chastotadan kuchliroq ta'sir qiladi."},
+    {q:"HFO da bemorni sozlashni nimadan boshlaysiz?",o:["FiO₂ ni 21% qilishdan","MAP optimallashtirishdan («ochilish nuqtasi»ni topish)","Maksimal SV dan","Chastotani 3 Gs gacha pasaytirishdan"],a:1,e:"Tartib: MAP → f → SV → FiO₂. Avval MAP ni tanlab o‘pkani ochasiz."},
+    {q:"Chaqaloqqa qaysi chastota tanlanadi?",o:["3–5 Gs","6–8 Gs","10–15 Gs","17–20 Gs"],a:2,e:"Chaqaloqlar: 10–15 Gs. Bemor qancha kichik bo‘lsa, chastota shuncha yuqori."},
+    {q:"pCO₂ yuqori (giperkapniya). Avval nima qilasiz?",o:["↓ SV","↑ SV 0.5–1 ml","↑ FiO₂","↑ chastota f"],a:1,e:"CO₂ SV orqali boshqariladi. Giperkapniyada SV oshiriladi; SV maksimal bo‘lsa — f pasaytiriladi."},
+    {q:"SV allaqachon maksimal, CO₂ hali yuqori. Keyingi qadam?",o:["Chastota f ni oshirish","Chastota f ni 1 Gs pasaytirish","MAP ni pasaytirish","FiO₂ ni oshirish"],a:1,e:"Chastotani pasaytirish har bir tebranish hajmini (V_hfo) oshiradi, demak DCO₂ va CO₂ chiqarish ortadi."},
+    {q:"Past SpO₂. Avval nimani tuzatasiz?",o:["SV","Chastota f","MAP (so‘ng FiO₂)","DCO₂"],a:2,e:"Oksigenatsiya MAP va FiO₂ bilan boshqariladi. Avval MAP — ochilish nuqtasi, keyin kerak bo‘lsa FiO₂."},
+    {q:"Bemorni ko‘rganda yetarli ostsillyatsiya belgisi:",o:["Ko‘krakning to‘liq harakatsizligi","Kindikgacha ko‘rinadigan ko‘krak tebranishi","Chuqur, siyrak ko‘krak ko‘tarilishi","Nafasda to‘sh suyagi botishi"],a:1,e:"Kindikgacha ko‘rinadigan tebranish va DCO₂ ortishi — yetarli ish belgilari."},
+    {q:"ΔA keskin ko‘tarildi, V_hfo va DCO₂ deyarli nolga tushdi. Bu:",o:["Barqaror bemorda normal","Ortiqcha sedatsiya belgisi","ETT obstruksiyasi — darhol sanatsiya","MAP ni pasaytirish signali"],a:2,e:"Amplituda ortib, V_hfo va DCO₂ tushishi — kritik signal: nay tiqilgan yoki uzilgan. Darhol sanatsiya/ETT tekshiruvi."},
+    {q:"Parametr o‘zgartirilgach qancha vaqtdan keyin qon gazlari olinadi?",o:["5 daqiqada","20–30 daqiqada","2 soatda","Darhol"],a:1,e:"Ertaroq — tizim muvozanatga kelmagan; kechroq — dekompensatsiyani o‘tkazib yuborasiz."},
+    {q:"HFO dan to‘g‘ri fitimdan chiqarish tartibi:",o:["Avval MAP ni keskin tushir, so‘ng FiO₂","Avval FiO₂ 5%, so‘ng MAP 1 sm","MAP, SV va f ni birga pasaytir","Avval namlagichni o‘chir"],a:1,e:"Avval FiO₂ ni 5% dan, faqat keyin MAP ni 1 sm dan pasaytiring. MAP keskin tushishi alveolalarni yopadi."}
+  ]
+};
+
+/* ---------- Контент: сценарии ---------- */
+const SCEN = {
+  ru:[
+    {tag:"oxy",tagL:"Оксигенация",
+     sit:"Недоношенный с RDS на HFO. SpO₂ держится 84% при FiO₂ 45%. Грудная клетка вибрирует, DCO₂ стабильный, газы по CO₂ в норме.",
+     vit:[["SpO₂","84%",true],["FiO₂","45%",false],["MAP","9",false],["pCO₂","42",false]],
+     o:["↑ SV на 1 мл","↑ MAP на 1–2 см H₂O, затем при необходимости FiO₂","↓ частоту f","Снизить MAP"],a:1,
+     e:"Проблема в оксигенации, CO₂ в норме. Оксигенацией управляет прежде всего MAP — ищем «точку раскрытия». FiO₂ поднимаем только после."},
+    {tag:"vent",tagL:"Вентиляция",
+     sit:"Доношенный с MAS. Через 30 минут газы: pCO₂ 68 мм рт. ст. (гиперкапния). SpO₂ хороший, SV ещё далёк от максимума.",
+     vit:[["pCO₂","68",true],["SpO₂","95%",false],["SV","6.0 мл",false],["DCO₂","320",false]],
+     o:["↑ FiO₂","↑ SV на 0.5–1 мл","↑ MAP","Ничего, ждать ещё час"],a:1,
+     e:"CO₂ регулируется через SV. SV не на максимуме — повышаем его на 0.5–1 мл, через 20–30 мин контроль газов."},
+    {tag:"vent",tagL:"Вентиляция",
+     sit:"pCO₂ всё ещё высокий, но SV уже на максимуме для этого пациента. Что дальше?",
+     vit:[["pCO₂","60",true],["SV","макс",true],["f","12 Гц",false],["DCO₂","300",false]],
+     o:["↑ частоту f до 15 Гц","↓ частоту f на 1 Гц","↑ FiO₂","↓ MAP"],a:1,
+     e:"Когда SV исчерпан, снижение частоты увеличивает V_hfo каждого колебания и повышает DCO₂ — CO₂ выводится лучше."},
+    {tag:"alarm",tagL:"Тревога",
+     sit:"Внезапно: вибрация грудной клетки исчезла, ΔA резко выросла, V_hfo и DCO₂ упали почти до нуля, SpO₂ падает. Сработала критическая тревога.",
+     vit:[["ΔA","↑↑",true],["V_hfo","≈0",true],["DCO₂","≈0",true],["SpO₂","↓",true]],
+     o:["Поднять MAP и подождать","Санация / проверка ЭТТ немедленно (обструкция или отсоединение)","Увеличить SV до максимума","Снизить частоту"],a:1,
+     e:"Рост ΔA при падении V_hfo и DCO₂ — классическая картина забитой или отсоединённой ЭТТ. Действие — немедленная санация и проверка трубки."},
+    {tag:"oxy",tagL:"Отучение",
+     sit:"Стабильный пациент. SpO₂ 97% при FiO₂ 35% и MAP 10. Пора отучать. С чего начать?",
+     vit:[["SpO₂","97%",false],["FiO₂","35%",false],["MAP","10",false],["pCO₂","40",false]],
+     o:["Сначала резко снизить MAP","Сначала снижать FiO₂ по 5%, потом MAP по 1 см","Снизить SV и MAP одновременно","Отключить HFO сразу"],a:1,
+     e:"Отучаем по правилу: сначала FiO₂ по 5%, затем MAP по 1 см. Резкое падение MAP вызывает коллапс альвеол — придётся начинать заново."},
+    {tag:"vent",tagL:"Вентиляция",
+     sit:"Контрольные газы: pCO₂ 26 мм рт. ст. — гипокапния, риск алкалоза. Пациент перевентилируется.",
+     vit:[["pCO₂","26",true],["SpO₂","96%",false],["SV","7.5 мл",false],["V_hfo","2.1 мл/кг",true]],
+     o:["↑ SV","↓ SV на 0.5–1 мл (цель V_hfo 1.2–1.4 мл/кг)","↑ частоту","↑ MAP"],a:1,
+     e:"При гипокапнии снижают SV, целясь в V_hfo 1.2–1.4 мл/кг. Это уменьшает выведение CO₂ и убирает алкалоз."}
+  ],
+  en:[
+    {tag:"oxy",tagL:"Oxygenation",
+     sit:"Preterm with RDS on HFO. SpO₂ stays at 84% on FiO₂ 45%. Chest vibrates, DCO₂ stable, CO₂ gases normal.",
+     vit:[["SpO₂","84%",true],["FiO₂","45%",false],["MAP","9",false],["pCO₂","42",false]],
+     o:["↑ SV by 1 mL","↑ MAP by 1–2 cmH₂O, then FiO₂ if needed","↓ frequency f","Lower MAP"],a:1,
+     e:"It's an oxygenation problem; CO₂ is fine. Oxygenation is driven mainly by MAP — find the opening point. Raise FiO₂ only afterwards."},
+    {tag:"vent",tagL:"Ventilation",
+     sit:"Term baby with MAS. At 30 min, gases: pCO₂ 68 mmHg (hypercapnia). SpO₂ good, SV well below maximum.",
+     vit:[["pCO₂","68",true],["SpO₂","95%",false],["SV","6.0 mL",false],["DCO₂","320",false]],
+     o:["↑ FiO₂","↑ SV by 0.5–1 mL","↑ MAP","Nothing, wait another hour"],a:1,
+     e:"CO₂ is controlled via SV. SV isn't maxed — raise it by 0.5–1 mL and recheck gases in 20–30 min."},
+    {tag:"vent",tagL:"Ventilation",
+     sit:"pCO₂ is still high but SV is already at this patient's maximum. What next?",
+     vit:[["pCO₂","60",true],["SV","max",true],["f","12 Hz",false],["DCO₂","300",false]],
+     o:["↑ frequency f to 15 Hz","↓ frequency f by 1 Hz","↑ FiO₂","↓ MAP"],a:1,
+     e:"With SV exhausted, lowering frequency increases each oscillation's V_hfo and raises DCO₂ — CO₂ clears better."},
+    {tag:"alarm",tagL:"Alarm",
+     sit:"Suddenly: chest vibration gone, ΔA jumped up, V_hfo and DCO₂ near zero, SpO₂ falling. Critical alarm.",
+     vit:[["ΔA","↑↑",true],["V_hfo","≈0",true],["DCO₂","≈0",true],["SpO₂","↓",true]],
+     o:["Raise MAP and wait","Suction / check ETT immediately (obstruction or disconnection)","Max out SV","Lower frequency"],a:1,
+     e:"Rising ΔA with falling V_hfo and DCO₂ is the classic blocked/disconnected ETT picture. Act: suction and check the tube at once."},
+    {tag:"oxy",tagL:"Weaning",
+     sit:"Stable patient. SpO₂ 97% on FiO₂ 35% and MAP 10. Time to wean. Where do you start?",
+     vit:[["SpO₂","97%",false],["FiO₂","35%",false],["MAP","10",false],["pCO₂","40",false]],
+     o:["Drop MAP sharply first","Lower FiO₂ by 5% first, then MAP by 1 cm","Lower SV and MAP together","Stop HFO right away"],a:1,
+     e:"Wean by the rule: FiO₂ by 5% first, then MAP by 1 cm. A sudden MAP drop collapses alveoli — you'd start over."},
+    {tag:"vent",tagL:"Ventilation",
+     sit:"Control gases: pCO₂ 26 mmHg — hypocapnia, alkalosis risk. The patient is over-ventilated.",
+     vit:[["pCO₂","26",true],["SpO₂","96%",false],["SV","7.5 mL",false],["V_hfo","2.1 mL/kg",true]],
+     o:["↑ SV","↓ SV by 0.5–1 mL (target V_hfo 1.2–1.4 mL/kg)","↑ frequency","↑ MAP"],a:1,
+     e:"For hypocapnia lower SV, aiming for V_hfo 1.2–1.4 mL/kg. This reduces CO₂ clearance and corrects the alkalosis."}
+  ],
+  uz:[
+    {tag:"oxy",tagL:"Oksigenatsiya",
+     sit:"RDS bilan chala tug‘ilgan, HFO da. FiO₂ 45% da SpO₂ 84% da turibdi. Ko‘krak tebranadi, DCO₂ barqaror, CO₂ gazlari normal.",
+     vit:[["SpO₂","84%",true],["FiO₂","45%",false],["MAP","9",false],["pCO₂","42",false]],
+     o:["↑ SV 1 ml","↑ MAP 1–2 sm H₂O, so‘ng kerak bo‘lsa FiO₂","↓ chastota f","MAP ni pasaytirish"],a:1,
+     e:"Muammo oksigenatsiyada; CO₂ joyida. Oksigenatsiyani asosan MAP boshqaradi — ochilish nuqtasini toping. FiO₂ ni faqat keyin oshiring."},
+    {tag:"vent",tagL:"Ventilyatsiya",
+     sit:"MAS bilan muddatida tug‘ilgan. 30 daqiqada gazlar: pCO₂ 68 mm sim. ust. (giperkapniya). SpO₂ yaxshi, SV maksimaldan ancha past.",
+     vit:[["pCO₂","68",true],["SpO₂","95%",false],["SV","6.0 ml",false],["DCO₂","320",false]],
+     o:["↑ FiO₂","↑ SV 0.5–1 ml","↑ MAP","Hech narsa, yana bir soat kutish"],a:1,
+     e:"CO₂ SV orqali boshqariladi. SV maksimal emas — uni 0.5–1 ml oshiring va 20–30 daqiqada gazlarni qayta tekshiring."},
+    {tag:"vent",tagL:"Ventilyatsiya",
+     sit:"pCO₂ hali yuqori, lekin SV bu bemor uchun allaqachon maksimal. Keyin nima?",
+     vit:[["pCO₂","60",true],["SV","maks",true],["f","12 Gs",false],["DCO₂","300",false]],
+     o:["Chastota f ni 15 Gs gacha oshirish","Chastota f ni 1 Gs pasaytirish","↑ FiO₂","↓ MAP"],a:1,
+     e:"SV tugagach, chastotani pasaytirish har tebranishning V_hfo sini oshiradi va DCO₂ ni ko‘taradi — CO₂ yaxshiroq chiqadi."},
+    {tag:"alarm",tagL:"Signal",
+     sit:"To‘satdan: ko‘krak tebranishi yo‘qoldi, ΔA keskin ko‘tarildi, V_hfo va DCO₂ deyarli nolda, SpO₂ tushyapti. Kritik signal.",
+     vit:[["ΔA","↑↑",true],["V_hfo","≈0",true],["DCO₂","≈0",true],["SpO₂","↓",true]],
+     o:["MAP ni oshirib kutish","Darhol sanatsiya / ETT tekshiruvi (obstruksiya yoki uzilish)","SV ni maksimal qilish","Chastotani pasaytirish"],a:1,
+     e:"ΔA ortib, V_hfo va DCO₂ tushishi — tiqilgan/uzilgan ETT ning klassik manzarasi. Harakat: darhol sanatsiya va nayni tekshirish."},
+    {tag:"oxy",tagL:"Fitimdan chiqarish",
+     sit:"Barqaror bemor. FiO₂ 35% va MAP 10 da SpO₂ 97%. Fitimdan chiqarish vaqti. Nimadan boshlaysiz?",
+     vit:[["SpO₂","97%",false],["FiO₂","35%",false],["MAP","10",false],["pCO₂","40",false]],
+     o:["Avval MAP ni keskin tushirish","Avval FiO₂ ni 5%, so‘ng MAP ni 1 sm","SV va MAP ni birga pasaytirish","HFO ni darhol o‘chirish"],a:1,
+     e:"Qoida bo‘yicha: avval FiO₂ 5%, so‘ng MAP 1 sm. MAP keskin tushishi alveolalarni yopadi — qaytadan boshlashga to‘g‘ri keladi."},
+    {tag:"vent",tagL:"Ventilyatsiya",
+     sit:"Nazorat gazlari: pCO₂ 26 mm sim. ust. — gipokapniya, alkaloz xavfi. Bemor ortiqcha ventilyatsiya qilinyapti.",
+     vit:[["pCO₂","26",true],["SpO₂","96%",false],["SV","7.5 ml",false],["V_hfo","2.1 ml/kg",true]],
+     o:["↑ SV","↓ SV 0.5–1 ml (maqsad V_hfo 1.2–1.4 ml/kg)","↑ chastota","↑ MAP"],a:1,
+     e:"Gipokapniyada SV ni pasaytiring, V_hfo 1.2–1.4 ml/kg ni mo‘ljallang. Bu CO₂ chiqarishini kamaytiradi va alkalozni bartaraf qiladi."}
+  ]
+};
+
+/* ---------- Контент: карточки ---------- */
+const CARDS = {
+  ru:[
+    {ic:"🪽",q:"Что такое HFO одним образом?",a:"<b>Колибри.</b> Маленькие быстрые колебания вместо больших вдохов."},
+    {ic:"🎈",q:"Что происходит с альвеолой?",a:"Держим <b>открытой постоянно</b> на MAP и слегка трясём. Не «надуваем-сдуваем»."},
+    {ic:"🎯",q:"Четыре настройки (справа)?",a:"<b>SV · MAP · f · FiO₂.</b>"},
+    {ic:"📊",q:"Четыре авто-показателя (слева)?",a:"<b>ΔA · MAP измер · V_hfo · DCO₂.</b> По ним судим о работе."},
+    {ic:"🧮",q:"Формула DCO₂?",a:"<b>DCO₂ = V_hfo² × f.</b> Объём в квадрате — влияет сильнее частоты."},
+    {ic:"🫁",q:"Чем управляем оксигенацией?",a:"<b>MAP и FiO₂.</b> MAP важнее: ищем «точку раскрытия»."},
+    {ic:"💨",q:"Чем управляем вентиляцией (CO₂)?",a:"<b>SV (главное) и f.</b> SV формирует V_hfo, шаг 0.2 мл."},
+    {ic:"🎚",q:"Что крутим — SV или амплитуду?",a:"<b>SV.</b> Амплитуда ΔP/ΔA — это следствие SV, не настройка."},
+    {ic:"⚠️",q:"ΔA ↑, а V_hfo и DCO₂ → 0?",a:"<b>ЭТТ забита</b> или отсоединение → санация немедленно."},
+    {ic:"⏱",q:"Когда брать газы крови?",a:"<b>Через 20–30 минут</b> после изменения. Не раньше, не позже."},
+    {ic:"📉",q:"Порядок отучения?",a:"Сначала <b>FiO₂ по 5%</b>, потом <b>MAP по 1 см</b>. Никогда наоборот."},
+    {ic:"👶",q:"Частота новорождённому?",a:"<b>10–15 Гц.</b> Чем меньше пациент — тем выше частота."}
+  ],
+  en:[
+    {ic:"🪽",q:"HFO in one image?",a:"<b>A hummingbird.</b> Small fast oscillations instead of big breaths."},
+    {ic:"🎈",q:"What happens to the alveolus?",a:"Held <b>open continuously</b> at MAP and gently shaken. Not inflate–deflate."},
+    {ic:"🎯",q:"The four settings (right)?",a:"<b>SV · MAP · f · FiO₂.</b>"},
+    {ic:"📊",q:"The four auto-readouts (left)?",a:"<b>ΔA · measured MAP · V_hfo · DCO₂.</b> Judge function by these."},
+    {ic:"🧮",q:"The DCO₂ formula?",a:"<b>DCO₂ = V_hfo² × f.</b> Volume squared — matters more than frequency."},
+    {ic:"🫁",q:"What drives oxygenation?",a:"<b>MAP and FiO₂.</b> MAP first: find the opening point."},
+    {ic:"💨",q:"What drives ventilation (CO₂)?",a:"<b>SV (main) and f.</b> SV sets V_hfo, 0.2 mL step."},
+    {ic:"🎚",q:"Do you turn SV or amplitude?",a:"<b>SV.</b> Amplitude ΔP/ΔA is a consequence of SV, not a setting."},
+    {ic:"⚠️",q:"ΔA ↑ while V_hfo and DCO₂ → 0?",a:"<b>Blocked ETT</b> or disconnection → suction immediately."},
+    {ic:"⏱",q:"When to draw blood gases?",a:"<b>At 20–30 minutes</b> after a change. Not sooner, not later."},
+    {ic:"📉",q:"Order of weaning?",a:"<b>FiO₂ by 5%</b> first, then <b>MAP by 1 cm</b>. Never the reverse."},
+    {ic:"👶",q:"Frequency for a neonate?",a:"<b>10–15 Hz.</b> The smaller the patient, the higher the frequency."}
+  ],
+  uz:[
+    {ic:"🪽",q:"HFO bir tasvirda?",a:"<b>Kolibri.</b> Katta nafaslar o‘rniga kichik tez tebranishlar."},
+    {ic:"🎈",q:"Alveolaga nima bo‘ladi?",a:"MAP da <b>doimo ochiq</b> ushlanadi va ohista silkitiladi. Shishir-bo‘shat emas."},
+    {ic:"🎯",q:"To‘rt sozlama (o‘ngda)?",a:"<b>SV · MAP · f · FiO₂.</b>"},
+    {ic:"📊",q:"To‘rt avto-ko‘rsatkich (chapda)?",a:"<b>ΔA · o‘lchangan MAP · V_hfo · DCO₂.</b> Ish shular bilan baholanadi."},
+    {ic:"🧮",q:"DCO₂ formulasi?",a:"<b>DCO₂ = V_hfo² × f.</b> Hajm kvadratda — chastotadan kuchliroq."},
+    {ic:"🫁",q:"Oksigenatsiyani nima boshqaradi?",a:"<b>MAP va FiO₂.</b> Avval MAP: ochilish nuqtasini toping."},
+    {ic:"💨",q:"Ventilyatsiyani (CO₂) nima boshqaradi?",a:"<b>SV (asosiy) va f.</b> SV V_hfo ni belgilaydi, 0.2 ml qadam."},
+    {ic:"🎚",q:"SV ni yoki amplitudani burasizmi?",a:"<b>SV.</b> Amplituda ΔP/ΔA — SV natijasi, sozlama emas."},
+    {ic:"⚠️",q:"ΔA ↑, V_hfo va DCO₂ → 0?",a:"<b>ETT tiqilgan</b> yoki uzilgan → darhol sanatsiya."},
+    {ic:"⏱",q:"Qon gazlari qachon olinadi?",a:"O‘zgarishdan <b>20–30 daqiqa keyin</b>. Ertaroq emas, kechroq emas."},
+    {ic:"📉",q:"Fitimdan chiqarish tartibi?",a:"Avval <b>FiO₂ 5%</b>, so‘ng <b>MAP 1 sm</b>. Hech qachon teskari emas."},
+    {ic:"👶",q:"Chaqaloqqa chastota?",a:"<b>10–15 Gs.</b> Bemor qancha kichik, chastota shuncha yuqori."}
+  ]
+};
+
+/* ---------- Контент: ошибки ---------- */
+const MIST = {
+  ru:[
+    {do:"Установить MAP по «точке раскрытия» — от мин до макс, потом назад",dont:"Скопировать MAP с CMV — будет мало",why:"На HFO лёгкие держат открытыми постоянно. Слишком низкий MAP → плохой комплайнс; слишком высокий → перерастяжение → нарушение перфузии → десатурация."},
+    {do:"Менять что-то одно за раз",dont:"Покрутить сразу MAP, SV и f",why:"Иначе не поймёшь, какое изменение помогло, а какое навредило."},
+    {do:"Смотреть на грудную клетку и V_hfo / DCO₂",dont:"Ориентироваться только на цифры или только на глаз",why:"Видимая вибрация до пупка + рост DCO₂ — лучшие индикаторы адекватной работы."},
+    {do:"Газы крови через 20–30 минут",dont:"Через 5 минут или через час",why:"Раньше — система не успела уравновеситься; позже — пропустишь декомпенсацию."},
+    {do:"Седация и при необходимости миоплегия",dont:"Бороться с активным дыханием пациента",why:"Спонтанные вдохи на HFO нарушают всю физиологию метода."},
+    {do:"Снижать FiO₂ первым при отучении",dont:"Сразу резко снижать MAP",why:"Резкое падение MAP → коллапс альвеол → всё начинай сначала."}
+  ],
+  en:[
+    {do:"Set MAP by the opening point — min to max, then back",dont:"Copy MAP from CMV — it will be too low",why:"On HFO lungs are kept open continuously. Too low a MAP → poor compliance; too high → overdistension → impaired perfusion → desaturation."},
+    {do:"Change one thing at a time",dont:"Turn MAP, SV and f all at once",why:"Otherwise you won't know which change helped and which harmed."},
+    {do:"Watch the chest and V_hfo / DCO₂",dont:"Rely on numbers alone or the eye alone",why:"Visible vibration to the navel + rising DCO₂ are the best indicators of adequate function."},
+    {do:"Blood gases at 20–30 minutes",dont:"At 5 minutes or after an hour",why:"Earlier — not equilibrated; later — you miss decompensation."},
+    {do:"Sedation, and paralysis if needed",dont:"Fight the patient's active breathing",why:"Spontaneous breaths on HFO disrupt the whole physiology of the method."},
+    {do:"Lower FiO₂ first when weaning",dont:"Drop MAP sharply straight away",why:"A sudden MAP drop → alveolar collapse → start all over again."}
+  ],
+  uz:[
+    {do:"MAP ni «ochilish nuqtasi» bo‘yicha qo‘yish — mindan maksgacha, so‘ng orqaga",dont:"MAP ni CMV dan ko‘chirish — kam bo‘ladi",why:"HFO da o‘pka doimo ochiq ushlanadi. MAP juda past → yomon komplayens; juda yuqori → ortiqcha cho‘zilish → perfuziya buzilishi → desaturatsiya."},
+    {do:"Bir vaqtda bitta narsani o‘zgartirish",dont:"MAP, SV va f ni birvarakayiga burash",why:"Aks holda qaysi o‘zgarish yordam berdi-yu, qaysi biri zarar qildi — bilmaysiz."},
+    {do:"Ko‘krakka va V_hfo / DCO₂ ga qarash",dont:"Faqat raqamlarga yoki faqat ko‘zga tayanish",why:"Kindikgacha tebranish + DCO₂ ortishi — yetarli ishning eng yaxshi ko‘rsatkichlari."},
+    {do:"Qon gazlari 20–30 daqiqada",dont:"5 daqiqada yoki bir soatdan keyin",why:"Ertaroq — tizim muvozanatga kelmagan; kechroq — dekompensatsiyani o‘tkazib yuborasiz."},
+    {do:"Sedatsiya, kerak bo‘lsa mioplegiya",dont:"Bemorning faol nafasiga qarshi kurashish",why:"HFO da mustaqil nafaslar usulning butun fiziologiyasini buzadi."},
+    {do:"Fitimdan chiqarishda avval FiO₂ ni pasaytirish",dont:"Darrov MAP ni keskin tushirish",why:"MAP keskin tushishi → alveolalar yopilishi → hammasini qaytadan boshlash."}
+  ]
+};
+
+/* ============================ APP ENGINE ============================ */
+const LANGS=["ru","en","uz"];
+const store={
+  get(k,d){try{return JSON.parse(localStorage.getItem("hfoedu_"+k))??d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("hfoedu_"+k,JSON.stringify(v))}catch(e){}}
+};
+let lang = store.get("lang","ru");
+if(!LANGS.includes(lang)) lang="ru";
+let view = "home";
+const state = {lesson:0, quizAns:{}, quizDone:false, scnIdx:0, scnAns:null, scnSeen:{}};
+
+function t(){return UI[lang];}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+
+/* progress model */
+function getProg(){return store.get("prog",{lessons:[],testBest:null,scn:[],done:{}});}
+function setProg(p){store.set("prog",p);}
+function moduleStatus(){
+  const p=getProg();
+  return {
+    lessons: p.lessons.length>=LESSONS[lang].length,
+    test: p.testBest!==null && p.testBest>=80,
+    scenarios: (p.scn||[]).length>=SCEN[lang].length,
+    cards: !!(p.done&&p.done.cards),
+    mistakes: !!(p.done&&p.done.mistakes)
+  };
+}
+function overallPct(){
+  const s=moduleStatus();const arr=[s.lessons,s.test,s.scenarios,s.cards,s.mistakes];
+  return Math.round(arr.filter(Boolean).length/arr.length*100);
+}
+
+/* ---------- chrome ---------- */
+function renderChrome(){
+  document.documentElement.lang=lang;
+  document.getElementById("langs").innerHTML=LANGS.map(l=>
+    `<button class="${l===lang?'on':''}" onclick="setLang('${l}')">${l.toUpperCase()}</button>`).join("");
+  const n=t().nav;const st=moduleStatus();
+  const tabs=[["home",n.home,""],["lessons",n.lessons,st.lessons],["test",n.test,st.test],
+    ["scenarios",n.scenarios,st.scenarios],["cards",n.cards,st.cards],["mistakes",n.mistakes,st.mistakes]];
+  document.getElementById("tabs").innerHTML=tabs.map(([id,lbl,done])=>
+    `<button class="tab ${view===id?'on':''}" onclick="go('${id}')">${lbl}${done?'<span class="dot"></span>':''}</button>`).join("");
+}
+function setLang(l){lang=l;store.set("lang",l);state.quizAns={};state.quizDone=false;state.scnAns=null;render();}
+function go(v){view=v;state.quizAns={};state.quizDone=false;state.scnAns=null;window.scrollTo(0,0);render();}
+
+/* ---------- views ---------- */
+function viewHome(){
+  const m=t().modules;const st=moduleStatus();const p=getProg();const pct=overallPct();
+  const card=(id,ic,o,extra)=>`
+    <div class="modcard" onclick="go('${id}')">
+      <div class="mic">${ic}</div>
+      <h3>${o.t} ${st[id]?'<span class="pill done">✓</span>':''}</h3>
+      <p>${o.d}</p>
+      <div class="meta">${extra||''}</div>
+    </div>`;
+  const testMeta = p.testBest!==null ? `★ ${t().correct(Math.round(p.testBest/100*QUIZ[lang].length))} · ${p.testBest}%` : '';
+  return `
+    <section class="hero">
+      <div class="eyebrow">${t().heroEye}</div>
+      <h1 class="title">${t().heroTitle[0]}<br><span class="ac">${t().heroTitle[1]}</span></h1>
+      <svg class="wavebig" viewBox="0 0 600 54" preserveAspectRatio="none"><path d="M0 27 Q15 4 30 27 T60 27 T90 27 T120 27 T150 27 T180 27 T210 27 T240 27 T270 27 T300 27 T330 27 T360 27 T390 27 T420 27 T450 27 T480 27 T510 27 T540 27 T570 27 T600 27" fill="none" stroke="#14B8A6" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/></svg>
+      <p class="sub">${t().heroSub}</p>
+      <div class="card" style="margin-top:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="eyebrow" style="color:var(--mut)">${t().overall}</div>
+          <div class="num" style="font-size:20px;font-weight:700;color:var(--lime)">${pct}%</div>
+        </div>
+        <div class="progress"><i style="width:${pct}%"></i></div>
+      </div>
+      <div class="btnrow">
+        <button class="btn" onclick="go('lessons')">${t().start} →</button>
+        ${pct>0?`<button class="btn ghost" onclick="resetProg()">${t().reset}</button>`:''}
+      </div>
+    </section>
+    <div class="grid g2" style="margin-top:22px">
+      ${card('lessons','📘',m.lessons,`${p.lessons.length}/${LESSONS[lang].length}`)}
+      ${card('test','🎓',m.test,testMeta)}
+      ${card('scenarios','🩺',m.scenarios,`${(p.scn||[]).length}/${SCEN[lang].length}`)}
+      ${card('cards','🃏',m.cards,'')}
+      ${card('mistakes','⚠️',m.mistakes,'')}
+    </div>
+    <div class="disc">${t().disclaimer}</div>`;
+}
+
+function viewLessons(){
+  const ls=LESSONS[lang];const i=state.lesson;const L=ls[i];const p=getProg();
+  const chips=ls.map((x,k)=>`<button class="lchip ${k===i?'on':p.lessons.includes(k)?'seen':''}" onclick="setLesson(${k})">${k+1}</button>`).join("");
+  const body=L.body.map(par=>`<p>${par}</p>`).join("");
+  const key=`<div class="keybox"><div class="kl">★ ${lang==='ru'?'Запомни':lang==='uz'?'Yodda tut':'Remember'}</div><ul>${L.key.map(x=>`<li>${x}</li>`).join("")}</ul></div>`;
+  const formula=L.formula?`<div class="formula">${L.formula}</div>`:'';
+  const warn=L.warn?`<div class="warn"><b>⚠ </b>${L.warn}</div>`:'';
+  const last=i===ls.length-1;
+  return `
+    <div class="eyebrow">${t().lessonsTitle} · ${i+1}/${ls.length}</div>
+    <h2 class="sec">${t().lessonsSub}</h2>
+    <div class="lessonnav">${chips}</div>
+    <div class="card lessonbody">
+      <h3>${esc(L.t)}</h3>
+      <div class="lead">${L.lead}</div>
+      ${body}${formula}${key}${warn}
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="setLesson(${Math.max(0,i-1)})" ${i===0?'disabled':''}>← ${t().prev}</button>
+      ${last
+        ? `<button class="btn" onclick="finishLessons()">${t().markDone}</button>`
+        : `<button class="btn" onclick="markSeen(${i});setLesson(${i+1})">${t().next} →</button>`}
+    </div>`;
+}
+function setLesson(k){markSeen(state.lesson);state.lesson=k;window.scrollTo(0,0);render();}
+function markSeen(k){const p=getProg();if(!p.lessons.includes(k)){p.lessons.push(k);setProg(p);}}
+function finishLessons(){markSeen(state.lesson);renderChrome();go('test');}
+
+function viewTest(){
+  const qs=QUIZ[lang];
+  if(state.quizDone) return viewResult();
+  const ans=state.quizAns;const answered=Object.keys(ans).length;
+  const blocks=qs.map((Q,qi)=>{
+    const opts=Q.o.map((o,oi)=>{
+      const sel=ans[qi]===oi;
+      return `<div class="opt ${sel?'sel':''}" onclick="pick(${qi},${oi})">
+        <span class="mk">${"ABCD"[oi]}</span><span>${esc(o)}</span></div>`;
+    }).join("");
+    return `<div class="card qcard"><div class="qhead"><span>Q${qi+1} / ${qs.length}</span></div>
+      <div class="qtext">${esc(Q.q)}</div>${opts}</div>`;
+  }).join("");
+  return `
+    <div class="eyebrow">${t().testTitle}</div>
+    <h2 class="sec">${t().testSub}</h2>
+    ${blocks}
+    <div class="card" style="position:sticky;bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <span class="num" style="color:var(--mut);font-size:13px">${t().answeredOf(answered,qs.length)}</span>
+      <button class="btn" onclick="submitTest()" ${answered<qs.length?'disabled':''}>${t().check}</button>
+    </div>`;
+}
+function pick(qi,oi){state.quizAns[qi]=oi;render();}
+function submitTest(){
+  const qs=QUIZ[lang];let c=0;qs.forEach((Q,i)=>{if(state.quizAns[i]===Q.a)c++;});
+  const pct=Math.round(c/qs.length*100);
+  const p=getProg();if(p.testBest===null||pct>p.testBest){p.testBest=pct;setProg(p);}
+  state.quizDone=true;window.scrollTo(0,0);renderChrome();render();
+}
+function viewResult(){
+  const qs=QUIZ[lang];let c=0;qs.forEach((Q,i)=>{if(state.quizAns[i]===Q.a)c++;});
+  const pct=Math.round(c/qs.length*100);const pass=pct>=80;
+  const review=qs.map((Q,qi)=>{
+    const opts=Q.o.map((o,oi)=>{
+      let cls="opt lock";if(oi===Q.a)cls+=" correct";
+      else if(state.quizAns[qi]===oi)cls+=" wrong";
+      return `<div class="${cls}"><span class="mk">${"ABCD"[oi]}</span><span>${esc(o)}</span></div>`;
+    }).join("");
+    const ok=state.quizAns[qi]===Q.a;
+    return `<div class="card qcard"><div class="qhead"><span>Q${qi+1}</span>
+      <span style="color:${ok?'var(--green)':'var(--red)'}">${ok?'✓ '+t().correctLbl:'✗ '+t().wrongLbl}</span></div>
+      <div class="qtext">${esc(Q.q)}</div>${opts}
+      <div class="explain"><b>★</b> ${esc(Q.e)}</div></div>`;
+  }).join("");
+  return `
+    <div class="card result">
+      <div class="eyebrow">${t().yourScore}</div>
+      <div class="scorebig ${pass?'pass':'fail'}">${pct}<span style="font-size:24px">%</span></div>
+      <div class="badge ${pass?'pass':'fail'}">${pass?'✓ '+t().correct(c):t().correct(c)}</div>
+      <p class="sub" style="margin:8px auto 0">${pass?t().passMsg:t().failMsg}</p>
+      <div class="btnrow" style="justify-content:center">
+        <button class="btn" onclick="retryTest()">${t().retry}</button>
+        <button class="btn ghost" onclick="go('lessons')">${t().toLessons}</button>
+      </div>
+    </div>
+    <h2 class="sec" style="margin-top:24px">${t().review}</h2>
+    ${review}`;
+}
+function retryTest(){state.quizAns={};state.quizDone=false;window.scrollTo(0,0);render();}
+
+function viewScenarios(){
+  const sc=SCEN[lang];const i=state.scnIdx;const S=sc[i];
+  const vit=S.vit.map(v=>`<div class="vit"><span class="vk">${v[0]}</span><span class="vv ${v[2]?'bad':''}">${v[1]}</span></div>`).join("");
+  const picked=state.scnAns;
+  const opts=S.o.map((o,oi)=>{
+    let cls="opt";
+    if(picked!==null){cls+=" lock";if(oi===S.a)cls+=" correct";else if(picked===oi)cls+=" wrong";}
+    else if(picked===oi)cls+=" sel";
+    return `<div class="${cls}" onclick="${picked===null?`pickScn(${oi})`:''}">
+      <span class="mk">${"ABCD"[oi]}</span><span>${esc(o)}</span></div>`;
+  }).join("");
+  const fb = picked!==null ? `<div class="explain"><b>${picked===S.a?'✓ '+t().correctLbl:'✗ '+t().wrongLbl}.</b> ${esc(S.e)}</div>`:'';
+  const last=i===sc.length-1;
+  return `
+    <div class="eyebrow">${t().scnTitle} · ${i+1}/${sc.length}</div>
+    <h2 class="sec">${t().scnSub}</h2>
+    <div class="card scn">
+      <div class="tagrow"><span class="stag ${S.tag}">${esc(S.tagL)}</span></div>
+      <p style="font-size:15.5px;margin:6px 0 2px">${esc(S.sit)}</p>
+      <div class="vitals">${vit}</div>
+      <div style="font-weight:800;margin:6px 0 4px">${t().scnQ}</div>
+      ${opts}${fb}
+    </div>
+    ${picked!==null?`<div class="btnrow">
+      ${last?`<button class="btn" onclick="go('home')">${t().scnDone} ✓</button>`
+            :`<button class="btn" onclick="nextScn()">${t().scnNext}</button>`}
+    </div>`:''}`;
+}
+function pickScn(oi){
+  state.scnAns=oi;
+  const p=getProg();p.scn=p.scn||[];if(!p.scn.includes(state.scnIdx)){p.scn.push(state.scnIdx);setProg(p);}
+  renderChrome();render();
+}
+function nextScn(){state.scnIdx=Math.min(SCEN[lang].length-1,state.scnIdx+1);state.scnAns=null;window.scrollTo(0,0);render();}
+
+function viewCards(){
+  const cs=CARDS[lang];
+  markDone('cards');
+  const deck=cs.map((c,i)=>`
+    <div class="flip" id="flip${i}" onclick="document.getElementById('flip${i}').classList.toggle('on')">
+      <div class="flipin">
+        <div class="face front"><div class="ic">${c.ic}</div><div class="q">${esc(c.q)}</div>
+          <div class="hint">${lang==='ru'?'нажми →':lang==='uz'?'bosing →':'tap →'}</div></div>
+        <div class="face back"><div class="a">${c.a}</div></div>
+      </div>
+    </div>`).join("");
+  return `
+    <div class="eyebrow">${t().cardsTitle}</div>
+    <h2 class="sec">${t().cardsSub}</h2>
+    <div class="deck">${deck}</div>`;
+}
+
+function viewMistakes(){
+  const ms=MIST[lang];markDone('mistakes');
+  const cards=ms.map((m,i)=>`
+    <div class="card mcard">
+      <div class="mnum">${String(i+1).padStart(2,"0")}</div>
+      <div class="mpair">
+        <div class="mdo"><div class="ml">✓ ${t().do}</div>${esc(m.do)}</div>
+        <div class="mdont"><div class="ml">✗ ${t().dont}</div>${esc(m.dont)}</div>
+      </div>
+      <div class="mwhy"><b>${t().why}</b>${esc(m.why)}</div>
+    </div>`).join("");
+  return `
+    <div class="eyebrow">${t().mistTitle}</div>
+    <h2 class="sec">${t().mistSub}</h2>
+    ${cards}`;
+}
+function markDone(k){const p=getProg();p.done=p.done||{};if(!p.done[k]){p.done[k]=true;setProg(p);setTimeout(renderChrome,0);}}
+
+function resetProg(){
+  if(!confirm(lang==='ru'?'Сбросить весь прогресс обучения?':lang==='uz'?'Butun o‘quv natijasini tozalansinmi?':'Reset all training progress?'))return;
+  store.set("prog",{lessons:[],testBest:null,scn:[],done:{}});
+  state.lesson=0;state.scnIdx=0;state.scnAns=null;state.quizAns={};state.quizDone=false;
+  go('home');
+}
+
+/* ---------- router ---------- */
+function render(){
+  renderChrome();
+  const el=document.getElementById("view");
+  const map={home:viewHome,lessons:viewLessons,test:viewTest,scenarios:viewScenarios,cards:viewCards,mistakes:viewMistakes};
+  el.innerHTML=(map[view]||viewHome)();
+  const f=document.createElement("footer");f.className="";
+}
+render();
+/* footer */
+(function(){
+  const m=document.querySelector("main");
+  const f=document.createElement("footer");f.className="";
+  function paint(){f.innerHTML=`<div class="wrap" style="display:flex;gap:8px;flex-wrap:wrap"><span>${t().footer}</span><span class="dot">·</span><span>Tashkent · 2026</span><span class="dot">·</span><span>swanston.uz</span></div>`;}
+  paint();m.appendChild(f);
+  const _r=render;window.render=function(){_r();paint();};
+})();
+</script>
+</body>
+</html>
