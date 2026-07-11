@@ -1,0 +1,35 @@
+{
+  "name": "avatarstudio",
+  "private": true,
+  "version": "0.0.1",
+  "description": "AvatarStudio — платформа генерации видео с ИИ-аватарами (монорепо)",
+  "type": "module",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msgpackr-extract"
+    ]
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @avatarstudio/api --filter @avatarstudio/web dev",
+    "dev:all": "pnpm --parallel --filter './apps/*' dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "format": "prettier --write \"{apps,packages}/**/*.{ts,tsx,json,md}\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.0",
+    "eslint": "^9.30.0",
+    "eslint-config-prettier": "^10.1.0",
+    "prettier": "^3.6.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.35.0"
+  }
+}
