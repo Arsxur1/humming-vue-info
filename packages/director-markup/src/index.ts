@@ -1,35 +1,68 @@
 /**
  * Director Markup (дифференциатор D1) — разметка подачи речи и жестов, FR-3.6.
- *
- * Этап 0: только реестр тегов и вспомогательные проверки.
- * Полный парсер (токенизатор → AST → валидация → компиляторы SSML /
- * gesture_cues / plain text) — Этап 2 по docs/PLAN.md.
+ * Пайплайн: tokenize → parse (AST + валидация) → компиляторы
+ * (SSML / gesture_cues / plain text).
  */
 
-/** Самозакрывающиеся теги: [tag] или [tag:value] без парного [/tag]. */
-export const VOID_TAGS = ['pause', 'gesture', 'look', 'breath'] as const;
+export {
+  ALL_TAGS,
+  EMOTIONS,
+  GESTURE_KEY_PATTERN,
+  LIMITS,
+  LOOK_TARGETS,
+  PAIRED_TAGS,
+  VOID_TAGS,
+  isDirectorTag,
+  isVoidTag,
+  type DirectorTag,
+  type Emotion,
+  type LookTarget,
+  type PairedTag,
+  type VoidTag,
+} from './tags.js';
 
-/** Парные теги: [tag]…[/tag] или [tag:value]…[/tag]. */
-export const PAIRED_TAGS = ['emphasis', 'rate', 'pitch', 'emotion', 'phoneme'] as const;
+export type {
+  BreathNode,
+  EmotionNode,
+  EmphasisNode,
+  GestureNode,
+  LookNode,
+  MarkupDocument,
+  MarkupNode,
+  PauseNode,
+  PhonemeNode,
+  PitchNode,
+  RateNode,
+  Span,
+  TextNode,
+} from './ast.js';
 
-export const ALL_TAGS = [...VOID_TAGS, ...PAIRED_TAGS] as const;
+export {
+  DirectorMarkupError,
+  positionAt,
+  type MarkupErrorCode,
+  type SourcePosition,
+} from './errors.js';
 
-export type VoidTag = (typeof VOID_TAGS)[number];
-export type PairedTag = (typeof PAIRED_TAGS)[number];
-export type DirectorTag = (typeof ALL_TAGS)[number];
+export { tokenize, type TagToken, type TextToken, type Token } from './tokenizer.js';
+export { parse, safeParse, type SafeParseResult } from './parser.js';
+export {
+  compileToGestureCues,
+  compileToPlainText,
+  compileToSSML,
+  type GestureCue,
+} from './compilers.js';
 
-const TAG_PATTERN = /\[\/?([a-z-]+)(?::[^\]]+)?\]/g;
+import { isDirectorTag } from './tags.js';
 
-export function isDirectorTag(name: string): name is DirectorTag {
-  return (ALL_TAGS as readonly string[]).includes(name);
-}
+const TAG_SCAN = /\[\/?([a-z][a-z0-9-]*)(?::[^\]\n]+)?\]/g;
 
 /**
  * Быстрая проверка «есть ли в тексте разметка» — для UI и роутинга пайплайна.
- * Не валидирует корректность: этим займётся парсер Этапа 2.
+ * Не валидирует корректность — для этого parse/safeParse.
  */
 export function containsMarkup(text: string): boolean {
-  for (const match of text.matchAll(TAG_PATTERN)) {
+  for (const match of text.matchAll(TAG_SCAN)) {
     const name = match[1];
     if (name !== undefined && isDirectorTag(name)) return true;
   }
