@@ -1,4 +1,24 @@
 services:
+  # Всё приложение одной командой (нужен только Docker):
+  #   docker compose --profile app up --build
+  # Затем открыть http://localhost:5173
+  app:
+    build: .
+    profiles: ['app']
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://avatarstudio:avatarstudio@postgres:5432/avatarstudio
+      REDIS_URL: redis://redis:6379
+      STORAGE_DRIVER: fs
+      API_PUBLIC_URL: http://localhost:3001
+    ports:
+      - '5173:5173'
+      - '3001:3001'
+
   postgres:
     image: postgres:16-alpine
     environment:
