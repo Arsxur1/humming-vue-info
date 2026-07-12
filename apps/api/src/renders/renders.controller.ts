@@ -32,6 +32,17 @@ export class RendersController {
     return this.renders.create(workspaceId, projectId, dto, user);
   }
 
+  @Post('projects/:projectId/scenes/:sceneId/preview')
+  @RequirePermission('render.start')
+  preview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sceneId') sceneId: string,
+  ) {
+    return this.renders.createScenePreview(workspaceId, projectId, sceneId, user);
+  }
+
   @Get('projects/:projectId/renders')
   @RequirePermission('project.view')
   list(@Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string) {

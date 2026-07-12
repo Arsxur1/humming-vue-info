@@ -15,11 +15,16 @@ export interface UploadTokenPayload {
  * /api/uploads/:token c HMAC-подписанным токеном (ключ, mime, срок).
  */
 export class FsObjectStorage implements ObjectStorage {
+  private readonly baseDir: string;
+
   constructor(
-    private readonly baseDir: string,
+    baseDir: string,
     private readonly apiPublicUrl: string,
     private readonly secret: string,
-  ) {}
+  ) {
+    // Абсолютный путь обязателен: проверка выхода за baseDir сравнивает абсолютные пути
+    this.baseDir = path.resolve(baseDir);
+  }
 
   private filePath(key: string): string {
     const safe = path.normalize(key).replace(/^(\.\.[/\\])+/, '');

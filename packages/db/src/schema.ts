@@ -260,6 +260,8 @@ export const renderJobs = pgTable(
     creditsCharged: numeric('credits_charged', { precision: 12, scale: 2 }),
     outputKey: text('output_key'),
     durationMs: integer('duration_ms'),
+    /** Превью одной сцены (FR-5.4): бесплатно, рендерится только эта сцена. */
+    previewSceneId: uuid('preview_scene_id'),
     meta: jsonb('meta').notNull().default(sql`'{}'::jsonb`),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     startedAt: timestamp('started_at', { withTimezone: true }),

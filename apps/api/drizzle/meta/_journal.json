@@ -43,6 +43,13 @@
       "when": 1783850463433,
       "tag": "0005_registry_append_only_and_stoplist_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783851383419,
+      "tag": "0006_preview_scene",
+      "breakpoints": true
     }
   ]
 }

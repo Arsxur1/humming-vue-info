@@ -117,11 +117,21 @@ export async function processRenderJob(ctx: PipelineContext, jobId: string): Pro
   // ---------- preprocessing ----------
   await setStage('preprocessing', 0.02);
 
-  const sceneRows = await db
+  let sceneRows = await db
     .select()
     .from(scenesTable)
     .where(eq(scenesTable.projectId, job.projectId))
     .orderBy(asc(scenesTable.orderIndex));
+  if (job.previewSceneId) {
+    // Превью-режим (FR-5.4): рендерим только одну сцену
+    sceneRows = sceneRows.filter((s) => s.id === job.previewSceneId);
+    if (!sceneRows.length) {
+      throw new PermanentRenderError(
+        'SCENE_NOT_FOUND',
+        'Сцена для превью не найдена — обновите проект и попробуйте снова.',
+      );
+    }
+  }
   if (!sceneRows.length) {
     throw new PermanentRenderError('EMPTY_PROJECT', 'В проекте нет сцен — добавьте хотя бы одну.');
   }
@@ -221,6 +231,7 @@ export async function processRenderJob(ctx: PipelineContext, jobId: string): Pro
     const segment = await compositeScene({
       width,
       height,
+      aspectRatio: job.aspectRatio,
       durationMs: tts.durationMs,
       background: scene.row.background as Record<string, unknown>,
       avatarVideo: avatar.video,
@@ -321,12 +332,26 @@ export async function processRenderJob(ctx: PipelineContext, jobId: string): Pro
 interface CompositeArgs {
   width: number;
   height: number;
+  aspectRatio: string;
   durationMs: number;
   background: Record<string, unknown>;
   avatarVideo: Uint8Array;
   audioWav: Uint8Array;
   alignment: WordTiming[];
   textLayers: Array<Record<string, unknown>>;
+}
+
+interface Placement {
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+}
+
+/** Позиция слоя для формата (редактор хранит раздельно, FR-4.8); фолбэк 16:9 → дефолт. */
+function placementOf(props: Record<string, unknown>, aspect: string): Placement | null {
+  const placements = props.placements as Record<string, Placement> | undefined;
+  return placements?.[aspect] ?? placements?.['16:9'] ?? null;
 }
 
 /** FFmpeg-композитинг сцены: фон + аватар + текстовые слои + burn-in субтитры + аудио. */
@@ -348,18 +373,27 @@ async function compositeScene(args: CompositeArgs): Promise<Buffer> {
         ? `0x${args.background.color.replace('#', '')}`
         : '0x1A1A2E';
 
-    const filters: string[] = [
-      `[0:v][1:v]overlay=x=main_w-overlay_w-32:y=main_h-overlay_h-32[v0]`,
-    ];
+    // Позиция аватара из редактора (background.avatarPlacements[aspect]) или правый нижний угол
+    const avatarPlacements = args.background.avatarPlacements as
+      | Record<string, Placement>
+      | undefined;
+    const avatarPl = avatarPlacements?.[args.aspectRatio] ?? avatarPlacements?.['16:9'] ?? null;
+    const overlayPos = avatarPl
+      ? `x=${Math.round(avatarPl.x * args.width)}:y=${Math.round(avatarPl.y * args.height)}`
+      : 'x=main_w-overlay_w-32:y=main_h-overlay_h-32';
+    const filters: string[] = [`[0:v][1:v]overlay=${overlayPos}[v0]`];
     let current = 'v0';
     for (const [i, layer] of args.textLayers.entries()) {
       const text = escapeDrawtext(String(layer.text ?? ''));
       if (!text) continue;
-      const x = typeof layer.x === 'number' ? `w*${layer.x}` : '48';
-      const y = typeof layer.y === 'number' ? `h*${layer.y}` : `${64 + i * 48}`;
+      const pl = placementOf(layer, args.aspectRatio);
+      // rotation в drawtext не поддерживается — применяется только в canvas-превью [допущение до Этапа 7]
+      const x = pl ? `w*${pl.x}` : typeof layer.x === 'number' ? `w*${layer.x}` : '48';
+      const y = pl ? `h*${pl.y}` : typeof layer.y === 'number' ? `h*${layer.y}` : `${64 + i * 48}`;
+      const fontsize = Math.round(32 * (pl?.scale ?? 1));
       const next = `v${i + 1}`;
       filters.push(
-        `[${current}]drawtext=fontfile=${FONT_FILE}:text='${text}':fontcolor=white:fontsize=32:x=${x}:y=${y}[${next}]`,
+        `[${current}]drawtext=fontfile=${FONT_FILE}:text='${text}':fontcolor=white:fontsize=${fontsize}:x=${x}:y=${y}[${next}]`,
       );
       current = next;
     }

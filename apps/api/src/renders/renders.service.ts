@@ -165,6 +165,72 @@ export class RendersService {
     };
   }
 
+  /** Бесплатный превью-рендер одной сцены (FR-5.4): кредиты не резервируются. */
+  async createScenePreview(
+    workspaceId: string,
+    projectId: string,
+    sceneId: string,
+    actor: AuthenticatedUser,
+  ) {
+    const project = await this.db.query.projects.findFirst({
+      where: and(eq(projects.id, projectId), eq(projects.workspaceId, workspaceId)),
+    });
+    if (!project) {
+      throw new NotFoundException({
+        error: { code: 'PROJECT_NOT_FOUND', message: 'Проект не найден или удалён.' },
+      });
+    }
+    const scene = await this.db.query.scenes.findFirst({
+      where: and(eq(scenes.id, sceneId), eq(scenes.projectId, projectId)),
+    });
+    if (!scene) {
+      throw new NotFoundException({
+        error: { code: 'SCENE_NOT_FOUND', message: 'Сцена не найдена — обновите проект.' },
+      });
+    }
+    const parsed = safeParse(scene.script);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        error: { code: 'INVALID_SCRIPT', message: parsed.error.message },
+      });
+    }
+    const plain = compileToPlainText(parsed.document);
+    await this.moderation.assertScriptAllowed({
+      workspaceId,
+      projectId,
+      scriptHash: scriptHash([plain]),
+      plainText: plain,
+      actor,
+    });
+
+    const [job] = await this.db
+      .insert(renderJobs)
+      .values({
+        projectId,
+        workspaceId,
+        requestedBy: actor.id,
+        quality: '720p',
+        aspectRatio: project.aspectRatio,
+        previewSceneId: sceneId,
+        creditsReserved: '0',
+      })
+      .returning();
+    await recordRenderEvent(this.db, this.publisher, {
+      jobId: job!.id,
+      workspaceId,
+      status: 'queued',
+      stage: 'queued',
+      progress: 0,
+      message: 'превью сцены (бесплатно)',
+    });
+    await this.queue.add(
+      'render',
+      { jobId: job!.id },
+      { attempts: 3, backoff: { type: 'exponential', delay: 500 } },
+    );
+    return { jobId: job!.id, status: job!.status, creditsReserved: 0 };
+  }
+
   async get(workspaceId: string, jobId: string) {
     const job = await this.db.query.renderJobs.findFirst({
       where: and(eq(renderJobs.id, jobId), eq(renderJobs.workspaceId, workspaceId)),

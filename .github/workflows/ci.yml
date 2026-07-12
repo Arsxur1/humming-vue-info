@@ -55,3 +55,12 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Install ffmpeg and fonts (render pipeline)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-dejavu-core
+
+      - name: Install Playwright browser
+        run: pnpm --filter @avatarstudio/web exec playwright install --with-deps chromium
+
+      - name: E2E (editor, Playwright)
+        run: pnpm --filter @avatarstudio/web e2e

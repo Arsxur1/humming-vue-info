@@ -1,0 +1,86 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0f1117;
+  color: #e6e8ee;
+}
+button {
+  background: #2b6cb0; color: #fff; border: 0; border-radius: 6px;
+  padding: 6px 12px; cursor: pointer; font-size: 13px;
+}
+button:hover { background: #2c5282; }
+button.ghost { background: #232734; }
+button.ghost:hover { background: #2d3243; }
+button.danger { background: #9b2c2c; }
+button:disabled { opacity: 0.5; cursor: default; }
+input, textarea, select {
+  background: #1a1e2a; color: #e6e8ee; border: 1px solid #2d3243;
+  border-radius: 6px; padding: 7px 10px; font-size: 13px; font-family: inherit;
+}
+textarea { resize: vertical; }
+.auth-card {
+  max-width: 380px; margin: 12vh auto; background: #171a24;
+  border: 1px solid #262b3a; border-radius: 12px; padding: 28px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.error-text { color: #fc8181; font-size: 13px; }
+.muted { color: #8b91a5; font-size: 12px; }
+.projects-page { max-width: 860px; margin: 40px auto; padding: 0 16px; }
+.project-card {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #171a24; border: 1px solid #262b3a; border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 10px; cursor: pointer;
+}
+.project-card:hover { border-color: #3c445c; }
+.editor-layout {
+  display: grid; height: 100vh;
+  grid-template-rows: 48px 1fr;
+  grid-template-columns: 230px 1fr 260px;
+  grid-template-areas: 'top top top' 'scenes canvas inspector';
+}
+.topbar {
+  grid-area: top; display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; background: #12141d; border-bottom: 1px solid #232734;
+}
+.topbar .title { font-weight: 600; margin-right: auto; }
+.scenes-panel {
+  grid-area: scenes; background: #12141d; border-right: 1px solid #232734;
+  padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+}
+.scene-item {
+  background: #1a1e2a; border: 1px solid #262b3a; border-radius: 8px;
+  padding: 8px 10px; cursor: pointer; font-size: 13px;
+}
+.scene-item.selected { border-color: #4c9aff; }
+.scene-item .row { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+.scene-item .row button { padding: 2px 7px; font-size: 11px; }
+.canvas-area {
+  grid-area: canvas; display: flex; flex-direction: column; overflow: hidden;
+}
+.canvas-host { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.script-panel {
+  border-top: 1px solid #232734; background: #12141d; padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.markup-toolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+.markup-toolbar button { padding: 3px 8px; font-size: 12px; background: #232734; }
+.markup-toolbar button:hover { background: #2d3243; }
+.inspector {
+  grid-area: inspector; background: #12141d; border-left: 1px solid #232734;
+  padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px;
+}
+.inspector label { display: flex; flex-direction: column; gap: 4px; }
+.render-overlay {
+  position: fixed; inset: 0; background: rgba(6, 8, 12, 0.75);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+}
+.render-dialog {
+  background: #171a24; border: 1px solid #2d3243; border-radius: 12px;
+  padding: 22px; width: 560px; max-width: 92vw; display: flex; flex-direction: column; gap: 12px;
+}
+.progress-track { height: 8px; border-radius: 4px; background: #232734; overflow: hidden; }
+.progress-fill { height: 100%; background: #4c9aff; transition: width 0.4s; }
+.render-dialog video { width: 100%; border-radius: 8px; background: #000; }
+.save-chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: #232734; }
+.save-chip.conflict, .save-chip.error { background: #9b2c2c; }
