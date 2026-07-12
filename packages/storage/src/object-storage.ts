@@ -14,6 +14,8 @@ export interface PresignedUpload {
 
 export interface ObjectStorage {
   presignPut(key: string, mime: string, ttlSec: number): Promise<PresignedUpload>;
+  /** Временная ссылка на скачивание объекта. */
+  presignGet(key: string, ttlSec: number): Promise<string>;
   exists(key: string): Promise<boolean>;
   read(key: string): Promise<Buffer>;
   write(key: string, data: Buffer, mime: string): Promise<void>;

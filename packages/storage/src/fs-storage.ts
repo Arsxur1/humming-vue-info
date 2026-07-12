@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { ObjectStorage, PresignedUpload } from './object-storage.js';
 
 export interface UploadTokenPayload {
+  op: 'put' | 'get';
   key: string;
   mime: string;
   exp: number;
@@ -54,13 +55,19 @@ export class FsObjectStorage implements ObjectStorage {
 
   async presignPut(key: string, mime: string, ttlSec: number): Promise<PresignedUpload> {
     const exp = Date.now() + ttlSec * 1000;
-    const token = this.signToken({ key, mime, exp });
+    const token = this.signToken({ op: 'put', key, mime, exp });
     return {
       url: `${this.apiPublicUrl}/api/uploads/${token}`,
       method: 'PUT',
       headers: { 'Content-Type': mime },
       expiresAt: new Date(exp).toISOString(),
     };
+  }
+
+  async presignGet(key: string, ttlSec: number): Promise<string> {
+    const exp = Date.now() + ttlSec * 1000;
+    const token = this.signToken({ op: 'get', key, mime: 'application/octet-stream', exp });
+    return `${this.apiPublicUrl}/api/uploads/${token}`;
   }
 
   async exists(key: string): Promise<boolean> {

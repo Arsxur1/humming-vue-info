@@ -4,6 +4,7 @@ import express from 'express';
 import { loadEnv } from '@avatarstudio/shared';
 import { AppModule } from './app.module.js';
 import { runMigrations } from './db/migrate.js';
+import { setupRenderEventsWs } from './renders/render-events.ws.js';
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
@@ -19,7 +20,10 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
 
   await app.listen(env.API_PORT);
-  console.log(`[api] listening on http://localhost:${env.API_PORT} (health: /api/health)`);
+  setupRenderEventsWs(app);
+  console.log(
+    `[api] listening on http://localhost:${env.API_PORT} (health: /api/health, ws: /api/ws)`,
+  );
 }
 
 bootstrap().catch((err) => {

@@ -16,15 +16,19 @@ import { AssetsService } from './assets/assets.service.js';
 import { AssetsController } from './assets/assets.controller.js';
 import { PreviewService } from './assets/preview.service.js';
 import { StubVirusScanner, VIRUS_SCANNER } from './assets/virus-scanner.js';
+import { QueueModule } from './queue/queue.module.js';
+import { RendersService } from './renders/renders.service.js';
+import { RendersController } from './renders/renders.controller.js';
 
 @Module({
-  imports: [DbModule, StorageModule],
+  imports: [DbModule, StorageModule, QueueModule],
   controllers: [
     HealthController,
     AuthController,
     WorkspacesController,
     ProjectsController,
     AssetsController,
+    RendersController,
     UploadsController,
   ],
   providers: [
@@ -36,6 +40,7 @@ import { StubVirusScanner, VIRUS_SCANNER } from './assets/virus-scanner.js';
     ProjectsService,
     AssetsService,
     PreviewService,
+    RendersService,
     { provide: VIRUS_SCANNER, useClass: StubVirusScanner },
   ],
 })

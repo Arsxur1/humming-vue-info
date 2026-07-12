@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { Inject, Injectable } from '@nestjs/common';
-import { OBJECT_STORAGE, type ObjectStorage } from '../storage/object-storage.js';
+import { OBJECT_STORAGE, type ObjectStorage } from '@avatarstudio/storage';
 
 /**
  * Превью изображений: ffmpeg через pipe (без временных файлов),

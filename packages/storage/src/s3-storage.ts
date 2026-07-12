@@ -35,6 +35,11 @@ export class S3ObjectStorage implements ObjectStorage {
     };
   }
 
+  async presignGet(key: string, ttlSec: number): Promise<string> {
+    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
+    return getSignedUrl(this.client, command, { expiresIn: ttlSec });
+  }
+
   async exists(key: string): Promise<boolean> {
     try {
       await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));

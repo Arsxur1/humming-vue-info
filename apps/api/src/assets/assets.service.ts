@@ -5,7 +5,7 @@ import type { RequestUploadDto } from '@avatarstudio/shared';
 import { DB, type Db } from '../db/client.js';
 import { assets } from '../db/schema.js';
 import { AuditService } from '../audit/audit.service.js';
-import { OBJECT_STORAGE, type ObjectStorage } from '../storage/object-storage.js';
+import { OBJECT_STORAGE, type ObjectStorage } from '@avatarstudio/storage';
 import type { AuthenticatedUser } from '../auth/auth.guard.js';
 import { PreviewService } from './preview.service.js';
 import { VIRUS_SCANNER, type VirusScanner } from './virus-scanner.js';

@@ -10,8 +10,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@avatarstudio/db": "workspace:*",
+    "@avatarstudio/director-markup": "workspace:*",
     "@avatarstudio/shared": "workspace:*",
+    "@avatarstudio/storage": "workspace:*",
     "bullmq": "^5.56.0",
+    "drizzle-orm": "^0.45.2",
     "ioredis": "5.10.1"
   },
   "devDependencies": {

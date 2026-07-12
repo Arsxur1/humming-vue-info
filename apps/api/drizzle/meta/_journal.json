@@ -22,6 +22,13 @@
       "when": 1783833742582,
       "tag": "0002_projects_assets",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783845470798,
+      "tag": "0003_render_pipeline",
+      "breakpoints": true
     }
   ]
 }
