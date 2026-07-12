@@ -3,14 +3,22 @@ import { NestFactory } from '@nestjs/core';
 import express from 'express';
 import { loadEnv } from '@avatarstudio/shared';
 import { AppModule } from './app.module.js';
+import { createDb } from '@avatarstudio/db';
 import { runMigrations } from './db/migrate.js';
 import { setupRenderEventsWs } from './renders/render-events.ws.js';
+import { seedGlobalTemplates } from './templates/templates.service.js';
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
 
   await runMigrations(env.DATABASE_URL);
   console.log('[api] миграции БД применены');
+  {
+    const { db, pool } = createDb(env.DATABASE_URL);
+    const seeded = await seedGlobalTemplates(db);
+    if (seeded) console.log(`[api] стоковых шаблонов добавлено: ${seeded}`);
+    await pool.end();
+  }
 
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');

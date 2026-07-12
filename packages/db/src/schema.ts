@@ -395,3 +395,21 @@ export const generationRegistry = pgTable(
   },
   (t) => [index('generation_registry_job_idx').on(t.jobId)],
 );
+
+// ---------- Этап 9: шаблоны ----------
+
+/** Шаблон = снимок проекта с плейсхолдерами {{var}} (FR-6.2). workspace_id NULL = стоковый. */
+export const templates = pgTable(
+  'templates',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }),
+    category: text('category').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    snapshot: jsonb('snapshot').notNull(),
+    createdBy: uuid('created_by').references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('templates_workspace_idx').on(t.workspaceId, t.category)],
+);

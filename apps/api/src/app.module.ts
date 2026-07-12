@@ -28,6 +28,8 @@ import { ModerationService } from './moderation/moderation.service.js';
 import { ModerationController } from './moderation/moderation.controller.js';
 import { SharesService } from './shares/shares.service.js';
 import { PublicShareController, SharesController } from './shares/shares.controller.js';
+import { TemplatesService } from './templates/templates.service.js';
+import { TemplatesController } from './templates/templates.controller.js';
 
 @Module({
   imports: [DbModule, StorageModule, QueueModule],
@@ -41,6 +43,7 @@ import { PublicShareController, SharesController } from './shares/shares.control
     ModerationController,
     SharesController,
     PublicShareController,
+    TemplatesController,
     UploadsController,
   ],
   providers: [
@@ -57,6 +60,7 @@ import { PublicShareController, SharesController } from './shares/shares.control
     { provide: MODERATION_PROVIDER, useClass: CompositeModerationProvider },
     ModerationService,
     SharesService,
+    TemplatesService,
     { provide: VIRUS_SCANNER, useClass: StubVirusScanner },
   ],
 })

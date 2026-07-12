@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client.js';
 import type { Project } from '../api/types.js';
 import { useAuth } from '../store/auth.js';
+import { TemplatesGrid } from '../components/TemplatesGrid.js';
 
 export function ProjectsPage() {
   const { user, workspace, logout } = useAuth();
@@ -67,6 +68,8 @@ export function ProjectsPage() {
         </div>
       ))}
       {!projects.length && <p className="muted">Пока нет проектов — создайте первый.</p>}
+
+      {workspace && <TemplatesGrid workspaceId={workspace.id} />}
     </div>
   );
 }

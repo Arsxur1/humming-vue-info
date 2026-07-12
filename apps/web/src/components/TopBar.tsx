@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AspectRatio } from '@avatarstudio/shared';
+import { api } from '../api/client.js';
 import { useEditor } from '../store/editor.js';
 
 const ASPECTS: AspectRatio[] = ['16:9', '9:16', '1:1'];
@@ -15,13 +17,27 @@ export function TopBar() {
   const navigate = useNavigate();
   const {
     project,
+    workspaceId,
     saveState,
     selectedSceneId,
     setAspect,
     startRender,
     startScenePreview,
   } = useEditor();
+  const [templateSaved, setTemplateSaved] = useState(false);
   if (!project) return null;
+
+  async function saveAsTemplate() {
+    const name = window.prompt('Название шаблона:', project!.title);
+    if (!name || !workspaceId) return;
+    await api('POST', `/api/workspaces/${workspaceId}/templates`, {
+      projectId: project!.id,
+      name,
+      category: 'learning',
+    });
+    setTemplateSaved(true);
+    setTimeout(() => setTemplateSaved(false), 2500);
+  }
 
   return (
     <div className="topbar">
@@ -42,6 +58,9 @@ export function TopBar() {
           </button>
         ))}
       </div>
+      <button className="ghost" onClick={() => void saveAsTemplate()} data-testid="save-template">
+        {templateSaved ? '✓ Шаблон сохранён' : 'В шаблон'}
+      </button>
       <button
         className="ghost"
         disabled={!selectedSceneId}
