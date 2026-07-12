@@ -15,6 +15,13 @@
       "when": 1783797283887,
       "tag": "0001_audit_append_only",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783833742582,
+      "tag": "0002_projects_assets",
+      "breakpoints": true
     }
   ]
 }

@@ -53,3 +53,91 @@ export const acceptInviteSchema = z.object({
   token: z.string().min(1, 'Отсутствует токен приглашения'),
 });
 export type AcceptInviteDto = z.infer<typeof acceptInviteSchema>;
+
+// ---------- Этап 3: проекты, сцены, слои, ассеты ----------
+
+export const ASPECT_RATIOS = ['16:9', '9:16', '1:1', '4:5', '4:3'] as const;
+export type AspectRatio = (typeof ASPECT_RATIOS)[number];
+
+export const LAYER_TYPES = [
+  'text',
+  'image',
+  'video',
+  'shape',
+  'subtitle',
+  'screen_recording',
+] as const;
+export type LayerType = (typeof LAYER_TYPES)[number];
+
+export const SCENE_TRANSITIONS = ['cut', 'fade', 'dissolve', 'slide', 'wipe'] as const;
+export type SceneTransition = (typeof SCENE_TRANSITIONS)[number];
+
+export const createProjectSchema = z.object({
+  title: z.string().trim().min(1, 'Укажите название проекта').max(200),
+  aspectRatio: z.enum(ASPECT_RATIOS).default('16:9'),
+  defaultLanguage: z.string().min(2).max(20).default('ru'),
+});
+export type CreateProjectDto = z.infer<typeof createProjectSchema>;
+
+export const updateProjectSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200),
+    aspectRatio: z.enum(ASPECT_RATIOS),
+    defaultLanguage: z.string().min(2).max(20),
+  })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, { message: 'Нет полей для обновления' });
+export type UpdateProjectDto = z.infer<typeof updateProjectSchema>;
+
+export const layerSchema = z.object({
+  type: z.enum(LAYER_TYPES),
+  zIndex: z.number().int().min(0).max(1000),
+  props: z.record(z.unknown()).default({}),
+  startMs: z.number().int().min(0).nullable().default(null),
+  endMs: z.number().int().min(0).nullable().default(null),
+  keyframes: z.array(z.record(z.unknown())).nullable().default(null),
+});
+export type LayerDto = z.infer<typeof layerSchema>;
+
+export const createSceneSchema = z.object({
+  script: z.string().max(5000, 'Скрипт сцены — не более 5000 символов').default(''),
+  language: z.string().min(2).max(20).nullable().default(null),
+  voiceId: z.string().max(100).nullable().default(null),
+  avatarId: z.string().max(100).nullable().default(null),
+  background: z.record(z.unknown()).default({}),
+  transition: z.enum(SCENE_TRANSITIONS).default('cut'),
+  layers: z.array(layerSchema).max(50).default([]),
+});
+export type CreateSceneDto = z.infer<typeof createSceneSchema>;
+
+export const updateSceneSchema = z.object({
+  /** Оптимистическая блокировка: версия, которую видел клиент. */
+  expectedVersion: z.number().int().min(1, 'expectedVersion обязателен для автосохранения'),
+  script: z.string().max(5000).optional(),
+  language: z.string().min(2).max(20).nullable().optional(),
+  voiceId: z.string().max(100).nullable().optional(),
+  avatarId: z.string().max(100).nullable().optional(),
+  background: z.record(z.unknown()).optional(),
+  durationMs: z.number().int().min(0).nullable().optional(),
+  transition: z.enum(SCENE_TRANSITIONS).optional(),
+  layers: z.array(layerSchema).max(50).optional(),
+});
+export type UpdateSceneDto = z.infer<typeof updateSceneSchema>;
+
+export const reorderScenesSchema = z.object({
+  sceneIds: z.array(z.string().uuid()).min(1, 'Передайте порядок сцен'),
+});
+export type ReorderScenesDto = z.infer<typeof reorderScenesSchema>;
+
+export const restoreVersionSchema = z.object({});
+
+export const requestUploadSchema = z.object({
+  fileName: z.string().trim().min(1, 'Укажите имя файла').max(300),
+  mime: z.string().min(3).max(150),
+  sizeBytes: z
+    .number()
+    .int()
+    .min(1)
+    .max(500 * 1024 * 1024, 'Файл больше 500 МБ — загрузите файл меньшего размера'),
+});
+export type RequestUploadDto = z.infer<typeof requestUploadSchema>;

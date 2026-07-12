@@ -20,6 +20,7 @@ describe('RBAC-матрица (FR-1.3)', () => {
     expect(roleHasPermission('viewer', 'members.invite')).toBe(false);
     expect(roleHasPermission('viewer', 'workspace.update')).toBe(false);
     expect(roleHasPermission('viewer', 'project.create')).toBe(false);
+    expect(roleHasPermission('viewer', 'asset.upload')).toBe(false);
     expect(roleHasPermission('viewer', 'render.start')).toBe(false);
     expect(roleHasPermission('viewer', 'audit.view')).toBe(false);
   });
@@ -33,6 +34,7 @@ describe('RBAC-матрица (FR-1.3)', () => {
 
   it('editor работает с проектами и рендером, но не управляет участниками', () => {
     expect(roleHasPermission('editor', 'project.create')).toBe(true);
+    expect(roleHasPermission('editor', 'asset.upload')).toBe(true);
     expect(roleHasPermission('editor', 'render.start')).toBe(true);
     expect(roleHasPermission('editor', 'members.invite')).toBe(false);
     expect(roleHasPermission('editor', 'workspace.update')).toBe(false);

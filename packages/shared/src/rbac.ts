@@ -22,6 +22,8 @@ export const PERMISSIONS = [
   'project.create',
   'project.update',
   'project.delete',
+  // Ассеты (Этап 3)
+  'asset.upload',
   // Рендер (Этап 4)
   'render.start',
   'render.cancel',
@@ -42,6 +44,7 @@ const EDITOR: readonly Permission[] = [
   'comment.create',
   'project.create',
   'project.update',
+  'asset.upload',
   'render.start',
   'render.cancel',
 ];
