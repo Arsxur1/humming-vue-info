@@ -27,6 +27,12 @@ export const envSchema = z.object({
   STORAGE_FS_DIR: z.string().default('.data/storage'),
   API_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
 
+  // C2PA (FR-11.3). Пусто = тестовые сертификаты c2pa-node (только dev/test!).
+  // В production обязательны свой сертификат и TSA.
+  C2PA_CERT_PATH: z.string().optional(),
+  C2PA_KEY_PATH: z.string().optional(),
+  C2PA_TSA_URL: z.string().url().optional(),
+
   // Auth. В production секрет обязан приходить из окружения — дефолт только для dev/test.
   JWT_SECRET: z.string().min(16).default('dev-only-secret-change-me'),
   ACCESS_TOKEN_TTL_SEC: z.coerce.number().int().positive().default(15 * 60),

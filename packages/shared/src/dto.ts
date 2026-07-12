@@ -131,6 +131,33 @@ export type ReorderScenesDto = z.infer<typeof reorderScenesSchema>;
 
 export const restoreVersionSchema = z.object({});
 
+// ---------- Этап 5: модерация и шаринг ----------
+
+export const resolveModerationCaseSchema = z.object({
+  decision: z.enum(['approve', 'reject']),
+  note: z.string().max(1000).optional(),
+});
+export type ResolveModerationCaseDto = z.infer<typeof resolveModerationCaseSchema>;
+
+export const SHARE_VISIBILITIES = ['public', 'password', 'members'] as const;
+export type ShareVisibility = (typeof SHARE_VISIBILITIES)[number];
+
+export const createShareSchema = z
+  .object({
+    visibility: z.enum(SHARE_VISIBILITIES),
+    password: z.string().min(4, 'Пароль ссылки — минимум 4 символа').optional(),
+    ttlHours: z.number().int().min(1).max(24 * 365).optional(),
+  })
+  .refine((v) => v.visibility !== 'password' || !!v.password, {
+    message: 'Для ссылки с паролем укажите пароль',
+  });
+export type CreateShareDto = z.infer<typeof createShareSchema>;
+
+export const accessShareSchema = z.object({
+  password: z.string().optional(),
+});
+export type AccessShareDto = z.infer<typeof accessShareSchema>;
+
 export const requestUploadSchema = z.object({
   fileName: z.string().trim().min(1, 'Укажите имя файла').max(300),
   mime: z.string().min(3).max(150),

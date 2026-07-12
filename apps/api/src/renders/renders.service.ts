@@ -25,10 +25,12 @@ import {
   type RenderEventPublisher,
 } from '@avatarstudio/db';
 import { compileToPlainText, safeParse } from '@avatarstudio/director-markup';
+import { scriptHash } from '@avatarstudio/shared/scene-hash';
 import { OBJECT_STORAGE, type ObjectStorage } from '@avatarstudio/storage';
 import { DB } from '../db/client.js';
 import { projects } from '../db/schema.js';
 import { AuditService } from '../audit/audit.service.js';
+import { ModerationService } from '../moderation/moderation.service.js';
 import type { AuthenticatedUser } from '../auth/auth.guard.js';
 import { RENDER_QUEUE, REDIS_PUBLISHER } from '../queue/queue.module.js';
 
@@ -42,6 +44,7 @@ export class RendersService {
     @Inject(REDIS_PUBLISHER) private readonly publisher: RenderEventPublisher,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
     @Inject(AuditService) private readonly audit: AuditService,
+    @Inject(ModerationService) private readonly moderation: ModerationService,
   ) {}
 
   /** Постановка рендера: оценка стоимости → резервирование кредитов → очередь. */
@@ -76,6 +79,7 @@ export class RendersService {
 
     // Валидация разметки до списания кредитов
     let estimatedMs = 0;
+    const plainTexts: string[] = [];
     for (const [i, scene] of sceneRows.entries()) {
       const parsed = safeParse(scene.script);
       if (!parsed.success) {
@@ -86,9 +90,20 @@ export class RendersService {
           },
         });
       }
-      estimatedMs += estimateSpeechDurationMs(compileToPlainText(parsed.document));
+      const plain = compileToPlainText(parsed.document);
+      plainTexts.push(plain);
+      estimatedMs += estimateSpeechDurationMs(plain);
     }
     const estimatedCost = creditCost(estimatedMs, dto.quality);
+
+    // Модерация скрипта — до очереди и до резервирования кредитов (правило 1)
+    await this.moderation.assertScriptAllowed({
+      workspaceId,
+      projectId,
+      scriptHash: scriptHash(plainTexts),
+      plainText: plainTexts.join('\n'),
+      actor,
+    });
 
     const [job] = await this.db
       .insert(renderJobs)

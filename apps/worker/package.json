@@ -15,6 +15,7 @@
     "@avatarstudio/shared": "workspace:*",
     "@avatarstudio/storage": "workspace:*",
     "bullmq": "^5.56.0",
+    "c2pa-node": "^0.5.26",
     "drizzle-orm": "^0.45.2",
     "ioredis": "5.10.1"
   },

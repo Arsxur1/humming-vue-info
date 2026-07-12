@@ -29,6 +29,20 @@
       "when": 1783845470798,
       "tag": "0003_render_pipeline",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783850462495,
+      "tag": "0004_moderation_sharing_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1783850463433,
+      "tag": "0005_registry_append_only_and_stoplist_seed",
+      "breakpoints": true
     }
   ]
 }

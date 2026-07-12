@@ -12,7 +12,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "msgpackr-extract"
+      "msgpackr-extract",
+      "c2pa-node",
+      "sharp"
     ]
   },
   "scripts": {

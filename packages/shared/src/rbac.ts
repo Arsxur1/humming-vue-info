@@ -30,6 +30,10 @@ export const PERMISSIONS = [
   // Ревью
   'comment.create',
   'review.approve',
+  // Шаринг (Этап 5)
+  'share.create',
+  // Модерация (Этап 5)
+  'moderation.review',
   // Аудит
   'audit.view',
 ] as const;
@@ -47,6 +51,7 @@ const EDITOR: readonly Permission[] = [
   'asset.upload',
   'render.start',
   'render.cancel',
+  'share.create',
 ];
 
 const ADMIN: readonly Permission[] = [
@@ -59,6 +64,7 @@ const ADMIN: readonly Permission[] = [
     'members.role.update',
     'project.delete',
     'audit.view',
+    'moderation.review',
   ] as Permission[]),
 ];
 

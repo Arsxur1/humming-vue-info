@@ -5,6 +5,8 @@ import { createDb, finalizeRenderJob, recordRenderEvent } from '@avatarstudio/db
 import { createStorageFromEnv } from '@avatarstudio/storage';
 import { MockTTSProvider } from './providers/mock-tts.js';
 import { MockAvatarDriver } from './providers/mock-avatar.js';
+import { C2paSigner } from './c2pa.js';
+import { startDevTsa, type DevTsa } from './dev-tsa.js';
 import {
   JobCancelledError,
   PermanentRenderError,
@@ -24,6 +26,11 @@ connection.on('error', (err) => {
   console.error(`[worker] Redis недоступен (${env.REDIS_URL}): ${err.message}. Поднять: docker compose up -d redis`);
 });
 
+// C2PA обязателен; без внешнего TSA поднимаем встроенный dev-TSA (RFC 3161 на openssl)
+let devTsa: DevTsa | null = null;
+const tsaUrl = env.C2PA_TSA_URL ?? (devTsa = await startDevTsa()).url;
+if (devTsa) console.log(`[worker] dev-TSA поднят на ${tsaUrl} (production: задайте C2PA_TSA_URL)`);
+
 const ctx: PipelineContext = {
   db,
   storage,
@@ -31,6 +38,7 @@ const ctx: PipelineContext = {
   // Мок-провайдеры Этапа 4; реальные адаптеры подключатся на Этапе 7 за теми же интерфейсами
   tts: new MockTTSProvider(),
   avatar: new MockAvatarDriver(),
+  c2pa: new C2paSigner(env, tsaUrl),
 };
 
 interface RenderJobPayload {
@@ -108,6 +116,7 @@ worker.on('failed', (job, err) => {
 async function shutdown(signal: string): Promise<void> {
   console.log(`[worker] ${signal} — graceful shutdown`);
   await worker.close();
+  await devTsa?.close();
   publisher.disconnect();
   connection.disconnect();
   await pool.end();

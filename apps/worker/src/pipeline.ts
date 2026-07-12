@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { and, asc, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import {
+  generationRegistry,
   layers as layersTable,
   renderJobs,
   sceneRenderCache,
@@ -21,7 +22,7 @@ import {
   type RenderQuality,
   type WordTiming,
 } from '@avatarstudio/shared';
-import { sceneContentHash } from '@avatarstudio/shared/scene-hash';
+import { sceneContentHash, scriptHash } from '@avatarstudio/shared/scene-hash';
 import {
   compileToGestureCues,
   compileToPlainText,
@@ -30,6 +31,7 @@ import {
 } from '@avatarstudio/director-markup';
 import { escapeDrawtext, ffprobeDurationMs, FONT_FILE, runFfmpeg } from './ffmpeg.js';
 import { alignmentToSrt } from './subtitles.js';
+import type { C2paSigner } from './c2pa.js';
 
 /** Постоянная ошибка — ретраи бессмысленны (битый скрипт, пустой проект). */
 export class PermanentRenderError extends Error {
@@ -56,6 +58,8 @@ export interface PipelineContext {
   publisher: RenderEventPublisher;
   tts: ITTSProvider;
   avatar: IAvatarDriver;
+  /** Обязателен: рендер без C2PA-манифеста — баг (правило 1 CLAUDE.md). */
+  c2pa: C2paSigner;
 }
 
 export async function processRenderJob(ctx: PipelineContext, jobId: string): Promise<void> {
@@ -249,6 +253,7 @@ export async function processRenderJob(ctx: PipelineContext, jobId: string): Pro
   const dir = await mkdtemp(path.join(tmpdir(), `render-${jobId.slice(0, 8)}-`));
   let outputBuffer: Buffer;
   let totalDurationMs: number;
+  const combinedScriptHash = scriptHash(prepared.map((s) => s.plainText));
   try {
     const files: string[] = [];
     for (const [i, seg] of segments.entries()) {
@@ -258,17 +263,49 @@ export async function processRenderJob(ctx: PipelineContext, jobId: string): Pro
     }
     const listFile = path.join(dir, 'list.txt');
     await writeFile(listFile, files.map((f) => `file '${f}'`).join('\n'));
-    const outFile = path.join(dir, 'final.mp4');
+    const concatFile = path.join(dir, 'concat.mp4');
     // Сегменты кодированы одинаково → склейка без перекодирования
-    await runFfmpeg(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', outFile]);
-    outputBuffer = await readFile(outFile);
-    totalDurationMs = await ffprobeDurationMs(outFile);
+    await runFfmpeg(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', concatFile]);
+
+    // Обязательный C2PA-шаг (правило 1): сбой подписи валит рендер
+    const signedFile = path.join(dir, 'final-signed.mp4');
+    const project = await db.query.projects.findFirst({
+      columns: { title: true },
+      where: (t, { eq: eqOp }) => eqOp(t.id, job.projectId),
+    });
+    try {
+      await ctx.c2pa.signVideo(concatFile, signedFile, {
+        jobId,
+        workspaceId: job.workspaceId,
+        projectTitle: project?.title ?? 'AvatarStudio video',
+        scenes: total,
+        scriptHash: combinedScriptHash,
+        providers: { tts: ctx.tts.name, avatar: ctx.avatar.name },
+      });
+    } catch (err) {
+      throw new PermanentRenderError(
+        'C2PA_SIGNING_FAILED',
+        `Не удалось подписать видео C2PA-манифестом: ${(err as Error).message}. Рендер без манифеста запрещён — обратитесь в поддержку.`,
+      );
+    }
+    outputBuffer = await readFile(signedFile);
+    totalDurationMs = await ffprobeDurationMs(signedFile);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
 
   const outputKey = `renders/${jobId}.mp4`;
   await storage.write(outputKey, outputBuffer, 'video/mp4');
+
+  // Неизменяемый реестр генераций (FR-11.5)
+  await db.insert(generationRegistry).values({
+    jobId,
+    workspaceId: job.workspaceId,
+    userId: job.requestedBy,
+    scriptHash: combinedScriptHash,
+    claimGenerator: 'AvatarStudio/0.0.1',
+    scenes: total,
+  });
 
   const finalized = await finalizeRenderJob(db, jobId, 'done', {
     outputKey,

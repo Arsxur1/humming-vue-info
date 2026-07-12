@@ -314,3 +314,82 @@ export const creditTransactions = pgTable(
   },
   (t) => [index('credit_transactions_workspace_idx').on(t.workspaceId, t.createdAt)],
 );
+
+// ---------- Этап 5: модерация, шаринг, реестр генераций ----------
+
+/** Стоп-словарь модерации (FR-11.2). Наполнение — задача T&S; здесь механизм + сиды. */
+export const moderationStoplist = pgTable('moderation_stoplist', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  term: text('term').notNull(),
+  category: text('category').notNull(),
+  action: text('action', { enum: ['block', 'review'] }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Очередь ручной модерации. Одобренный кейс разблокирует рендер того же scriptHash. */
+export const moderationCases = pgTable(
+  'moderation_cases',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    projectId: uuid('project_id'),
+    scriptHash: text('script_hash').notNull(),
+    excerpt: text('excerpt').notNull(),
+    matchedTerm: text('matched_term'),
+    category: text('category'),
+    status: text('status', { enum: ['pending', 'approved', 'rejected'] })
+      .notNull()
+      .default('pending'),
+    note: text('note'),
+    reviewerId: uuid('reviewer_id').references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('moderation_cases_ws_idx').on(t.workspaceId, t.status),
+    uniqueIndex('moderation_cases_hash_unique').on(t.workspaceId, t.scriptHash),
+  ],
+);
+
+/** Шаринг готовых видео по ссылке (FR-1.6): public / password / members + TTL. */
+export const shareLinks = pgTable(
+  'share_links',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    token: text('token').notNull(),
+    jobId: uuid('job_id')
+      .notNull()
+      .references(() => renderJobs.id, { onDelete: 'cascade' }),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    visibility: text('visibility', { enum: ['public', 'password', 'members'] }).notNull(),
+    passwordHash: text('password_hash'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  },
+  (t) => [uniqueIndex('share_links_token_unique').on(t.token)],
+);
+
+/** Неизменяемый реестр генераций (FR-11.5): append-only триггером, retention ≥ 2 года. */
+export const generationRegistry = pgTable(
+  'generation_registry',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    jobId: uuid('job_id').notNull(),
+    workspaceId: uuid('workspace_id').notNull(),
+    userId: uuid('user_id').notNull(),
+    scriptHash: text('script_hash').notNull(),
+    claimGenerator: text('claim_generator').notNull(),
+    scenes: integer('scenes').notNull(),
+    ip: text('ip'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('generation_registry_job_idx').on(t.jobId)],
+);

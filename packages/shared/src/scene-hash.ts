@@ -30,6 +30,11 @@ export function stableStringify(value: unknown): string {
   return `{${entries.join(',')}}`;
 }
 
+/** Хеш всего скрипта проекта (для реестра генераций и кейсов модерации). */
+export function scriptHash(plainTexts: readonly string[]): string {
+  return createHash('sha256').update(plainTexts.join('\n')).digest('hex');
+}
+
 export function sceneContentHash(input: SceneHashInput): string {
   const canonical = stableStringify({
     script: input.script,

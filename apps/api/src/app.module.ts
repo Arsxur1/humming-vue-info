@@ -19,6 +19,15 @@ import { StubVirusScanner, VIRUS_SCANNER } from './assets/virus-scanner.js';
 import { QueueModule } from './queue/queue.module.js';
 import { RendersService } from './renders/renders.service.js';
 import { RendersController } from './renders/renders.controller.js';
+import {
+  CompositeModerationProvider,
+  MODERATION_PROVIDER,
+  StopListModerationProvider,
+} from './moderation/moderation.provider.js';
+import { ModerationService } from './moderation/moderation.service.js';
+import { ModerationController } from './moderation/moderation.controller.js';
+import { SharesService } from './shares/shares.service.js';
+import { PublicShareController, SharesController } from './shares/shares.controller.js';
 
 @Module({
   imports: [DbModule, StorageModule, QueueModule],
@@ -29,6 +38,9 @@ import { RendersController } from './renders/renders.controller.js';
     ProjectsController,
     AssetsController,
     RendersController,
+    ModerationController,
+    SharesController,
+    PublicShareController,
     UploadsController,
   ],
   providers: [
@@ -41,6 +53,10 @@ import { RendersController } from './renders/renders.controller.js';
     AssetsService,
     PreviewService,
     RendersService,
+    StopListModerationProvider,
+    { provide: MODERATION_PROVIDER, useClass: CompositeModerationProvider },
+    ModerationService,
+    SharesService,
     { provide: VIRUS_SCANNER, useClass: StubVirusScanner },
   ],
 })

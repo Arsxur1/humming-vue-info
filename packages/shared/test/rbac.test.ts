@@ -23,6 +23,8 @@ describe('RBAC-матрица (FR-1.3)', () => {
     expect(roleHasPermission('viewer', 'asset.upload')).toBe(false);
     expect(roleHasPermission('viewer', 'render.start')).toBe(false);
     expect(roleHasPermission('viewer', 'audit.view')).toBe(false);
+    expect(roleHasPermission('viewer', 'share.create')).toBe(false);
+    expect(roleHasPermission('viewer', 'moderation.review')).toBe(false);
   });
 
   it('reviewer может комментировать и утверждать, но не редактировать', () => {
@@ -36,6 +38,8 @@ describe('RBAC-матрица (FR-1.3)', () => {
     expect(roleHasPermission('editor', 'project.create')).toBe(true);
     expect(roleHasPermission('editor', 'asset.upload')).toBe(true);
     expect(roleHasPermission('editor', 'render.start')).toBe(true);
+    expect(roleHasPermission('editor', 'share.create')).toBe(true);
+    expect(roleHasPermission('editor', 'moderation.review')).toBe(false);
     expect(roleHasPermission('editor', 'members.invite')).toBe(false);
     expect(roleHasPermission('editor', 'workspace.update')).toBe(false);
   });
@@ -44,6 +48,7 @@ describe('RBAC-матрица (FR-1.3)', () => {
     expect(roleHasPermission('admin', 'members.invite')).toBe(true);
     expect(roleHasPermission('admin', 'members.role.update')).toBe(true);
     expect(roleHasPermission('admin', 'audit.view')).toBe(true);
+    expect(roleHasPermission('admin', 'moderation.review')).toBe(true);
     expect(roleHasPermission('admin', 'workspace.delete')).toBe(false);
   });
 
