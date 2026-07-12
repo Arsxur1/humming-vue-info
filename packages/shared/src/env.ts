@@ -21,6 +21,11 @@ export const envSchema = z.object({
   S3_ACCESS_KEY: z.string().default('avatarstudio'),
   S3_SECRET_KEY: z.string().default('avatarstudio'),
   S3_BUCKET: z.string().default('avatarstudio-dev'),
+
+  // Auth. В production секрет обязан приходить из окружения — дефолт только для dev/test.
+  JWT_SECRET: z.string().min(16).default('dev-only-secret-change-me'),
+  ACCESS_TOKEN_TTL_SEC: z.coerce.number().int().positive().default(15 * 60),
+  REFRESH_TOKEN_TTL_SEC: z.coerce.number().int().positive().default(30 * 24 * 60 * 60),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -2,9 +2,13 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { loadEnv } from '@avatarstudio/shared';
 import { AppModule } from './app.module.js';
+import { runMigrations } from './db/migrate.js';
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
+
+  await runMigrations(env.DATABASE_URL);
+  console.log('[api] миграции БД применены');
 
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
