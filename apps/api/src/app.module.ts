@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { HealthController } from './health/health.controller.js';
 import { DbModule } from './db/db.module.js';
+import { RateLimitModule } from './common/rate-limit/rate-limit.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UploadsController } from './storage/uploads.controller.js';
 import { MailerService } from './mailer/mailer.service.js';
@@ -32,7 +33,7 @@ import { TemplatesService } from './templates/templates.service.js';
 import { TemplatesController } from './templates/templates.controller.js';
 
 @Module({
-  imports: [DbModule, StorageModule, QueueModule],
+  imports: [DbModule, StorageModule, QueueModule, RateLimitModule],
   controllers: [
     HealthController,
     AuthController,

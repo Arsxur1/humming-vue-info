@@ -13,8 +13,30 @@ export type RegisterDto = z.infer<typeof registerSchema>;
 export const loginSchema = z.object({
   email: z.string().email('Укажите корректный e-mail'),
   password: z.string().min(1, 'Укажите пароль'),
+  /** Код из приложения-аутентификатора, если у аккаунта включена 2FA. */
+  totp: z.string().regex(/^\d{6}$/, 'Код 2FA — 6 цифр').optional(),
 });
 export type LoginDto = z.infer<typeof loginSchema>;
+
+// ---------- Сброс пароля ----------
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Укажите корректный e-mail'),
+});
+export type ForgotPasswordDto = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Отсутствует токен сброса'),
+  newPassword: z.string().min(8, 'Пароль — минимум 8 символов'),
+});
+export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
+
+// ---------- 2FA (TOTP) ----------
+
+export const twoFactorCodeSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, 'Код 2FA — 6 цифр'),
+});
+export type TwoFactorCodeDto = z.infer<typeof twoFactorCodeSchema>;
 
 export const refreshSchema = z.object({
   refreshToken: z.string().min(1, 'Отсутствует refresh-токен'),

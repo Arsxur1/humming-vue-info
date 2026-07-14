@@ -37,6 +37,42 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(16).default('dev-only-secret-change-me'),
   ACCESS_TOKEN_TTL_SEC: z.coerce.number().int().positive().default(15 * 60),
   REFRESH_TOKEN_TTL_SEC: z.coerce.number().int().positive().default(30 * 24 * 60 * 60),
+
+  // Почта (SMTP). Без SMTP_HOST — dev-режим: письма пишутся в лог, не отправляются.
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  SMTP_SECURE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().default('AvatarStudio <no-reply@avatarstudio.local>'),
+
+  // Rate limiting (лимиты чувствительных эндпоинтов). Отключается флагом для нагрузочных тестов.
+  RATE_LIMIT_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
+
+  // 2FA. issuer в otpauth-URI (то, что видно в приложении-аутентификаторе).
+  TOTP_ISSUER: z.string().default('AvatarStudio'),
+});
+
+export const DEV_JWT_SECRET = 'dev-only-secret-change-me';
+
+const envSchemaChecked = envSchema.superRefine((env, ctx) => {
+  // Fail-fast: в production нельзя стартовать с дефолтным dev-секретом
+  if (env.NODE_ENV === 'production') {
+    if (env.JWT_SECRET === DEV_JWT_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['JWT_SECRET'],
+        message:
+          'в production обязателен собственный JWT_SECRET (не dev-дефолт). Сгенерируйте: openssl rand -base64 48',
+      });
+    }
+  }
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -46,12 +82,16 @@ export type Env = z.infer<typeof envSchema>;
  * перечнем проблем — сервис не должен стартовать с битой конфигурацией.
  */
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
-  const parsed = envSchema.safeParse(source);
+  const parsed = envSchemaChecked.safeParse(source);
   if (!parsed.success) {
     const issues = parsed.error.issues
       .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
       .join('\n');
     throw new Error(`Некорректная конфигурация окружения:\n${issues}`);
+  }
+  // Мягкие предупреждения (не блокируют старт)
+  if (parsed.data.NODE_ENV === 'production' && parsed.data.STORAGE_DRIVER === 'fs') {
+    console.warn('[env] STORAGE_DRIVER=fs в production — используйте s3/MinIO для отказоустойчивости');
   }
   return parsed.data;
 }

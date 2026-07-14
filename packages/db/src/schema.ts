@@ -25,6 +25,9 @@ export const users = pgTable(
     name: text('name').notNull(),
     uiLocale: text('ui_locale').notNull().default('ru'),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
+    /** Секрет TOTP (base32). Заполнен = 2FA настраивается; активна — после mfaEnabledAt. */
+    mfaSecret: text('mfa_secret'),
+    mfaEnabledAt: timestamp('mfa_enabled_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('users_email_unique').on(t.email)],
@@ -39,6 +42,22 @@ export const emailVerifications = pgTable('email_verifications', {
   usedAt: timestamp('used_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Токены сброса пароля (FR-1.1). Храним только SHA-256-хеш токена. */
+export const passwordResets = pgTable(
+  'password_resets',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('password_resets_token_unique').on(t.tokenHash)],
+);
 
 export const refreshTokens = pgTable(
   'refresh_tokens',
