@@ -9,12 +9,8 @@ export default tseslint.config(
       '**/dist/**',
       '**/build/**',
       '**/coverage/**',
-      // Legacy HFO content in repo root — not part of AvatarStudio
-      '*.html',
-      '*.jsx',
-      '*.js',
-      '*.css',
-      'download',
+      // Не относящийся к AvatarStudio контент
+      'legacy-hfo/**',
     ],
   },
   js.configs.recommended,
